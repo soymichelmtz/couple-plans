@@ -382,7 +382,7 @@ function renderTopbar() {
           el('strong', { textContent: 'Couple Plans' }),
           el('span', {
             textContent: state.session
-              ? `Sesión: ${state.session.username}${state.session.email ? ` (${state.session.email})` : ''}`
+              ? `Sesión: ${state.session.email || state.session.username}`
               : 'Lista de planes',
           }),
         ),
