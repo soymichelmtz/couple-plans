@@ -28,16 +28,6 @@ Como es una app estática, puedes abrir `index.html` directamente en el navegado
 
 Si tienes Node instalado, puedes usar cualquier servidor estático (por ejemplo, la extensión “Live Server” en VS Code) o uno sencillo.
 
-## Usuarios
-
-Por defecto, quedan así (puedes cambiarlos en `src/seed.js`):
-
-- `michel` / `1234`
-- `sarahi` / `1234`
-
-> Si ya habías abierto la app antes, puede que tu navegador tenga usuarios viejos guardados.
-> En ese caso, limpia el `localStorage` del sitio o abre en una ventana privada para regenerar el seed.
-
 ## Datos
 
 Los planes se guardan en este navegador usando `localStorage`.
@@ -54,15 +44,12 @@ Si ya creaste el proyecto y Firestore, falta conectar la app:
 
 Archivo de referencia: `src/firebase-config.example.js`.
 
-### Login con usuario (michel / sarahi)
+### Login (2 usuarios)
 
-La UI pide **usuario** y **contraseña**, pero por debajo Firebase Auth requiere un “email”.
-Usamos estos emails internos (tú los creas en Firebase Auth):
+La UI pide **usuario** y **contraseña**, pero por debajo Firebase Auth requiere cuentas **Email/Password**.
 
-- `michel@couple-plans.local`
-- `sarahi@couple-plans.local`
-
-En Firebase Console → Authentication → Users, crea ambos usuarios con Email/Password.
+- Crea **2 usuarios** en Firebase Console → Authentication → Users.
+- Puedes usar emails “internos” como placeholders, por ejemplo: `usuario1@tu-app.local` y `usuario2@tu-app.local`.
 
 > La protección real la hacen las reglas de Firestore (`firestore.rules`).
 
