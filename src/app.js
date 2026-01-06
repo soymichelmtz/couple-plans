@@ -5,9 +5,11 @@ import { createCloud } from './cloud.js';
 
 const APP_VERSION = '1.0.0';
 
+// Configura aquí los 2 emails permitidos (Firebase Auth Email/Password).
+// Por privacidad, el repo trae placeholders: reemplázalos por los tuyos.
 const USER_EMAILS = {
-  michel: 'michel@couple-plans.local',
-  sarahi: 'sarahi@couple-plans.local',
+  user1: 'user1@example.com',
+  user2: 'user2@example.com',
 };
 
 const ALLOWED_EMAILS = Object.values(USER_EMAILS);
@@ -404,7 +406,7 @@ function renderLogin() {
             const username = document.getElementById(userId).value.trim().toLowerCase();
             const password = document.getElementById(passId).value;
             const email = USER_EMAILS[username];
-            if (!email) return toast('Usuario inválido. Usa: michel o sarahi.');
+            if (!email) return toast('Usuario inválido. Usa uno de los usuarios configurados.');
             try {
               await cloud.signIn(email, password);
             } catch (err) {

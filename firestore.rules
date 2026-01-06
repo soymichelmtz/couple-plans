@@ -3,8 +3,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function isAllowedUser() {
       return request.auth != null
-  && (request.auth.token.email == "michel@couple-plans.local"
-      || request.auth.token.email == "sarahi@couple-plans.local");
+  // Reemplaza estos emails por los 2 correos reales que tengas en Firebase Auth.
+  && (request.auth.token.email == "user1@example.com"
+      || request.auth.token.email == "user2@example.com");
     }
 
     // Workspace doc + subcollections
