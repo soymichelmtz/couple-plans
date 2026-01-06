@@ -278,7 +278,9 @@ function setupDragAndDrop(listRoot, plans) {
     const over = getCardFromEvent(ev);
     const fromId = draggingId;
     const toId = over?.getAttribute('data-plan-id');
-    clearDragging();
+  // cleanup listeners
+  listRoot.removeEventListener('pointermove', onPointerMove);
+  clearDragging();
 
     if (!toId || toId === fromId) return;
 
@@ -303,7 +305,9 @@ function setupDragAndDrop(listRoot, plans) {
 
     handle.addEventListener('pointerdown', (ev) => {
       // Only starts if user grabs the handle
+      // Prevent details toggle + prevent scroll stealing the gesture on mobile.
       ev.preventDefault();
+      ev.stopPropagation();
       draggingId = id;
       pointerStartY = ev.clientY;
       node.classList.add('dragging');
