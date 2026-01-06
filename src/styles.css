@@ -350,6 +350,11 @@ label {
   line-height: 1;
 }
 
+/* While dragging (mobile), prevent the browser from turning the gesture into scroll */
+.drag-mode {
+  touch-action: none;
+}
+
 
 
 .meta-break {

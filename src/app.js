@@ -259,27 +259,33 @@ function setupDragAndDrop(listRoot, plans) {
     pointerStartY = 0;
     if (raf) cancelAnimationFrame(raf);
     raf = 0;
+    listRoot.classList.remove('drag-mode');
   };
 
-  const getCardFromEvent = (ev) => {
-    const t = ev.target;
-    if (!(t instanceof Element)) return null;
-    return t.closest('[data-plan-id]');
+  const getCardFromPoint = (clientX, clientY) => {
+    // On mobile, ev.target often stays as the handle while moving.
+    // elementFromPoint gives the element currently under the finger.
+    const elAt = document.elementFromPoint(clientX, clientY);
+    if (!(elAt instanceof Element)) return null;
+    return elAt.closest('[data-plan-id]');
   };
 
   const onPointerMove = (ev) => {
     if (!draggingId) return;
-    const over = getCardFromEvent(ev);
+    // prevent scroll while dragging
+    ev.preventDefault();
+    const over = getCardFromPoint(ev.clientX, ev.clientY);
     draggables.forEach((n) => n.classList.toggle('drag-over', n === over));
   };
 
   const onPointerUp = async (ev) => {
     if (!draggingId) return;
-    const over = getCardFromEvent(ev);
+    const over = getCardFromPoint(ev.clientX, ev.clientY);
     const fromId = draggingId;
     const toId = over?.getAttribute('data-plan-id');
   // cleanup listeners
-  listRoot.removeEventListener('pointermove', onPointerMove);
+    listRoot.removeEventListener('pointermove', onPointerMove);
+    listRoot.removeEventListener('pointercancel', onPointerUp);
   clearDragging();
 
     if (!toId || toId === fromId) return;
@@ -311,11 +317,17 @@ function setupDragAndDrop(listRoot, plans) {
       draggingId = id;
       pointerStartY = ev.clientY;
       node.classList.add('dragging');
+      listRoot.classList.add('drag-mode');
       try { handle.setPointerCapture(ev.pointerId); } catch {
         // ignore
       }
-      listRoot.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp, { once: true });
+      // Capture on listRoot so we keep receiving events even if finger leaves the handle.
+      try { listRoot.setPointerCapture(ev.pointerId); } catch {
+        // ignore
+      }
+      listRoot.addEventListener('pointermove', onPointerMove, { passive: false });
+      listRoot.addEventListener('pointerup', onPointerUp, { once: true });
+      listRoot.addEventListener('pointercancel', onPointerUp, { once: true });
     });
   });
 }
