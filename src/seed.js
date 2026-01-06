@@ -2,16 +2,17 @@ import { Storage } from './storage.js';
 import { DEFAULT_LOCATIONS } from './locations.js';
 
 export const DEFAULT_USERS = [
-  // Nota: no incluimos contraseñas reales en el repo.
-  // En modo local, el seed solo existe para sugerir usuarios; la contraseña
-  // la defines tú al primer uso (o puedes migrar a Firebase Auth).
+  // Placeholder local users (no passwords committed). If you still use local login,
+  // set your own passwords locally (do NOT commit them).
   { username: 'michel', password: '' },
   { username: 'sarahi', password: '' },
 ];
 
 export function seedIfEmpty() {
   const users = Storage.getUsers();
-  if (!users.length) Storage.setUsers(DEFAULT_USERS);
+  // Important: do NOT seed passwords into storage from the repository.
+  // If you want local-login users, set them manually in your browser storage.
+  if (!users.length) Storage.setUsers([]);
 
   const locations = Storage.getLocations();
   if (!locations.length) Storage.setLocations(DEFAULT_LOCATIONS);
