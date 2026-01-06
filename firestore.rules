@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAllowedUser() {
+      return request.auth != null
+  && (request.auth.token.email == "michel@couple-plans.local"
+      || request.auth.token.email == "sarahi@couple-plans.local");
+    }
+
+    // Workspace doc + subcollections
+    match /workspaces/{workspaceId} {
+      allow read, write: if isAllowedUser();
+
+      match /plans/{planId} {
+        allow read, write: if isAllowedUser();
+      }
+    }
+  }
+}
