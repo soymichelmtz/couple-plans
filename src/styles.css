@@ -609,6 +609,66 @@ html:not([data-theme="dark"]) .pill.ok {
 .badge.pending { border-color: rgba(251,146,60,0.25); background: rgba(251,146,60,0.10); }
 .badge.done { border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.10); }
 
+/* Theme toggle (replaces Export/Import) */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.theme-toggle:active {
+  transform: translateY(1px);
+}
+
+.theme-toggle__emoji {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.theme-toggle__text {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.theme-toggle__switch {
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.theme-toggle__knob {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  transition: transform 160ms ease;
+}
+
+.theme-toggle__switch.is-on {
+  background: rgba(167, 139, 250, 0.22);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+.theme-toggle__switch.is-on .theme-toggle__knob {
+  transform: translateY(-50%) translateX(20px);
+}
+
 .toast {
   position: fixed;
   left: 50%;

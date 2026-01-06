@@ -34,6 +34,12 @@ function setTheme(theme) {
   }
 }
 
+function toggleTheme() {
+  const next = getTheme() === 'dark' ? 'light' : 'dark';
+  setTheme(next);
+  render();
+}
+
 const state = {
   session: null, // { username, email }
   user: null, // Firebase user
@@ -522,8 +528,19 @@ function renderHome() {
         el('div', { className: 'row space' },
           el('h2', { textContent: 'Couple Plans' }),
           el('div', { className: 'row' },
-            el('button', { className: 'btn small', type: 'button', textContent: 'Exportar', onclick: () => exportJson() }),
-            el('button', { className: 'btn small', type: 'button', textContent: 'Importar', onclick: () => importJson() }),
+            el('button', {
+              className: 'theme-toggle',
+              type: 'button',
+              title: 'Cambiar tema',
+              'aria-label': 'Cambiar tema',
+              onclick: () => toggleTheme(),
+            },
+              el('span', { className: 'theme-toggle__emoji', textContent: getTheme() === 'dark' ? '🌙' : '☀️' }),
+              el('span', { className: 'theme-toggle__text', textContent: getTheme() === 'dark' ? 'Oscuro' : 'Claro' }),
+              el('span', { className: `theme-toggle__switch ${getTheme() === 'dark' ? 'is-on' : ''}` },
+                el('span', { className: 'theme-toggle__knob' }),
+              ),
+            ),
           ),
         ),
         tabs,
