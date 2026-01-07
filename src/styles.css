@@ -711,6 +711,16 @@ html:not([data-theme="dark"]) .pill.ok {
   color: var(--muted2);
 }
 
+/* Prevent the small counter (e.g. "13 de 14") from forcing wraps in
+   compact/mobile rows. Keep it compact and prevent it from growing. */
+.row.space > .small {
+  flex: 0 0 auto;       /* don't grow or shrink */
+  font-size: 11px;      /* slightly smaller to fit better on small screens */
+  color: var(--muted2);
+  white-space: nowrap;  /* avoid wrapping the text */
+  margin-left: 8px;     /* small gap from the left block */
+}
+
 .footer {
   max-width: 980px;
   margin: 0 auto;
