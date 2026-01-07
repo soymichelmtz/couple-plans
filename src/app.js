@@ -1010,26 +1010,36 @@ function renderPlanList(plans) {
         const title = `${typeEmoji}${timeEmoji} ${p.place}`;
         const statusClass = p.status === 'Completado' ? 'is-done' : 'is-pending';
 
-        return el('button', {
-          type: 'button',
-          className: `plan-tile ${statusClass}`,
-          title,
-          onclick: () => {
-            // Switch back to list and open the selected plan
-            state.viewMode = 'list';
-            render();
-            queueMicrotask(() => {
-              const d = document.querySelector(`details.plan[data-plan-id="${CSS.escape(p.id)}"]`);
-              if (d) {
-                d.setAttribute('open', '');
-                d.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
-            });
-          },
+        // Reuse the same `details.plan` styling, but keep it compact.
+        // In compact mode we collapse actions/meta via CSS inside `.plan-grid`.
+        return el('details', {
+          className: `plan plan--compact ${statusClass}`,
+          open: false,
+          'data-plan-id': p.id,
         },
-          el('div', { className: 'plan-tile__title', textContent: title }),
-          el('div', { className: 'plan-tile__meta' },
-            el('span', { className: 'small', textContent: p.location }),
+          el('summary', {
+            className: 'plan-summary',
+            title,
+            onclick: (e) => {
+              // Prevent <details> from toggling; instead jump to full list view.
+              e.preventDefault();
+              state.viewMode = 'list';
+              render();
+              queueMicrotask(() => {
+                const d = document.querySelector(`details.plan[data-plan-id="${CSS.escape(p.id)}"]`);
+                if (d) {
+                  d.setAttribute('open', '');
+                  d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              });
+            },
+          },
+            el('div', { className: 'plan-summary-left' },
+              el('div', { style: 'min-width:0' },
+                el('h3', { textContent: title }),
+                el('div', { className: 'small', textContent: p.location }),
+              ),
+            ),
           ),
         );
       }),
