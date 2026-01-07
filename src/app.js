@@ -48,6 +48,7 @@ const state = {
   locations: [],
   editingId: null,
   homeTab: 'plans', // 'new' | 'plans'
+  viewMode: 'list', // 'list' | 'compact'
   filters: {
     q: '',
     status: 'Pendiente',
@@ -57,6 +58,12 @@ const state = {
     tagTimes: [],
   },
 };
+
+function getPlanEmojis(p) {
+  const typeEmoji = p.type === 'Comida' ? '🐷' : '🚗';
+  const timeEmoji = p.time === 'Día' ? '🌤️' : p.time === 'Tarde' ? '☀️' : '🌑';
+  return { typeEmoji, timeEmoji };
+}
 
 function toggleInArray(arr, value) {
   const v = String(value);
@@ -586,6 +593,31 @@ function renderHome() {
     el('div', { className: 'small', textContent: `${filtered.length} de ${state.plans.length}` }),
   );
 
+  const viewToggle = el('div', { className: 'view-toggle', role: 'group', 'aria-label': 'Vista de planes' },
+    el('button', {
+      className: `view-toggle__btn ${state.viewMode === 'list' ? 'active' : ''}`,
+      type: 'button',
+      title: 'Vista lista',
+      'aria-pressed': state.viewMode === 'list' ? 'true' : 'false',
+      textContent: '☰',
+      onclick: () => {
+        state.viewMode = 'list';
+        render();
+      },
+    }),
+    el('button', {
+      className: `view-toggle__btn ${state.viewMode === 'compact' ? 'active' : ''}`,
+      type: 'button',
+      title: 'Vista compacta',
+      'aria-pressed': state.viewMode === 'compact' ? 'true' : 'false',
+      textContent: '▦',
+      onclick: () => {
+        state.viewMode = 'compact';
+        render();
+      },
+    }),
+  );
+
   return el('main', { className: 'container' },
     el('div', { className: 'card' },
       el('div', { className: 'card-inner grid' },
@@ -612,7 +644,10 @@ function renderHome() {
           ? el('div', { className: 'card-inner', style: 'padding:0' }, renderPlanForm())
           : el('div', { className: 'grid' },
               renderFilters(),
-              statusQuick,
+              el('div', { className: 'row space' },
+                statusQuick,
+                viewToggle,
+              ),
               renderPlanList(filtered),
             ),
       ),
@@ -967,6 +1002,42 @@ function renderPlanList(plans) {
     return el('div', { className: 'small', textContent: 'Aún no hay planes con esos filtros.' });
   }
 
+  // Compact grid (mobile-friendly)
+  if (state.viewMode === 'compact') {
+    const grid = el('div', { className: 'plan-grid' },
+      ...plans.map((p) => {
+        const { typeEmoji, timeEmoji } = getPlanEmojis(p);
+        const title = `${typeEmoji}${timeEmoji} ${p.place}`;
+        const statusClass = p.status === 'Completado' ? 'is-done' : 'is-pending';
+
+        return el('button', {
+          type: 'button',
+          className: `plan-tile ${statusClass}`,
+          title,
+          onclick: () => {
+            // Switch back to list and open the selected plan
+            state.viewMode = 'list';
+            render();
+            queueMicrotask(() => {
+              const d = document.querySelector(`details.plan[data-plan-id="${CSS.escape(p.id)}"]`);
+              if (d) {
+                d.setAttribute('open', '');
+                d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            });
+          },
+        },
+          el('div', { className: 'plan-tile__title', textContent: title }),
+          el('div', { className: 'plan-tile__meta' },
+            el('span', { className: 'small', textContent: p.location }),
+          ),
+        );
+      }),
+    );
+
+    return grid;
+  }
+
   const formatDateDMY = (value) => {
     if (!value) return '';
     const d = new Date(value);
@@ -985,9 +1056,8 @@ function renderPlanList(plans) {
 
       const isFav = Boolean(p.isFavorite);
 
-    const typeEmoji = p.type === 'Comida' ? '🐷' : '🚗';
+    const { typeEmoji, timeEmoji } = getPlanEmojis(p);
     const typeLabel = p.type === 'Comida' ? '🐷 Comida' : '🚗 Visitar';
-  const timeEmoji = p.time === 'Día' ? '🌤️' : p.time === 'Tarde' ? '☀️' : '🌑';
     const timeLabel = `${timeEmoji} ${p.time}`;
     const titlePrefix = `${typeEmoji}${timeEmoji} `;
 
