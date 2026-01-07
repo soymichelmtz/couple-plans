@@ -207,7 +207,9 @@ a { color: inherit; }
 
 /* Allow the left-side content in the spaced row to shrink so the toggle can stay on one line */
 .row.space > .row:first-child {
-  flex: 1 1 auto;
+  /* Reduce how much the left-side block expands inside spaced rows so
+     the right-side counter/toggle doesn't get pushed all the way to the edge. */
+  flex: 0.6 1 auto;
   min-width: 0;
 }
 

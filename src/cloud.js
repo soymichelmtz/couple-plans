@@ -94,5 +94,7 @@ export function createCloud(allowedEmails) {
       const ref = Firebase.doc(db, 'workspaces', WORKSPACE_ID, 'plans', id);
       await Firebase.deleteDoc(ref);
     },
+
+    // (logs feature removed) 
   };
 }

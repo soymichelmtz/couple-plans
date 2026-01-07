@@ -45,6 +45,7 @@ const state = {
   user: null, // Firebase user
   cloudReady: false,
   plans: [],
+  // logs feature removed — keep only role in session
   locations: [],
   editingId: null,
   homeTab: 'plans', // 'new' | 'plans'
@@ -124,6 +125,8 @@ function toast(message) {
   window.clearTimeout(toast._t);
   toast._t = window.setTimeout(() => node.classList.remove('show'), 1800);
 }
+
+// logs feature removed — cache-reset helper and related UI removed
 
 function confirmModal({ title = 'Confirmar', message = '¿Estás seguro?', confirmText = 'Confirmar', cancelText = 'Cancelar' } = {}) {
   return new Promise((resolve) => {
@@ -453,7 +456,7 @@ function renderTopbar() {
           el('strong', { textContent: 'Couple Plans' }),
           el('span', {
             textContent: state.session
-              ? `Sesión: ${state.session.email || state.session.username}`
+              ? `Sesión: ${state.session.email || state.session.username}${state.session.role ? ' · ' + state.session.role : ''}`
               : 'Lista de planes',
           }),
         ),
@@ -1154,6 +1157,8 @@ function renderPlanList(plans) {
   return root;
 }
 
+// logs UI removed
+
 function exportJson() {
   const payload = {
     version: APP_VERSION,
@@ -1264,10 +1269,22 @@ cloud.onAuth(async (userOrInfo) => {
 
   const user = userOrInfo;
   state.user = user;
-  state.session = { username: user.displayName || user.email || 'Usuario', email: user.email || '' };
+  // Assign role based on known test emails
+  const email = (user.email || '').toLowerCase();
+  let role = 'Usuario';
+  if (email === (USER_EMAILS.michel || '').toLowerCase()) role = 'Administrador';
+  else if (email === (USER_EMAILS.sarahi || '').toLowerCase()) role = 'Usuario';
+
+  state.session = { username: user.displayName || user.email || 'Usuario', email: user.email || '', role };
+  // Expose state for quick debugging in DevTools
+  try { window.__CP_STATE = state; } catch (e) {}
+  // Debug trace to check role assignment
+  try { console.debug('cloud.onAuth -> email:', email, 'assignedRole:', role, 'user:', user); } catch (e) {}
   state.cloudReady = true;
   setRoute('home');
   render();
+
+  // No-op: sign-in logging removed
 
   // Start realtime listeners once
   if (!cloud._listening) {
@@ -1292,8 +1309,12 @@ cloud.onAuth(async (userOrInfo) => {
       render();
     });
   }
+
+  // logs feature removed: no subscription performed
 });
 
 // Ensure login is the default route until auth resolves
 if (!state.session) setRoute('login');
 render();
+
+// logs feature removed — no startup subscription
