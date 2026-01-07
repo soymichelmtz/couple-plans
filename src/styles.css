@@ -188,7 +188,7 @@ a { color: inherit; }
   flex-wrap: nowrap;
 }
 
-.row.space { justify-content: space-between; }
+.row.space { justify-content: space-between; flex-wrap: nowrap; align-items: center; }
 
 .view-toggle {
   display: inline-flex;
@@ -202,7 +202,7 @@ a { color: inherit; }
 /* Keep the view-toggle on the same line when inside a wrapping row */
 .row.space > .view-toggle {
   flex: 0 0 auto;
-  margin-left: 8px;
+  margin-left: auto; /* push to the right */
 }
 
 /* Allow the left-side content in the spaced row to shrink so the toggle can stay on one line */
