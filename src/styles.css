@@ -192,8 +192,8 @@ a { color: inherit; }
 
 .view-toggle {
   display: inline-flex;
-  gap: 6px;
-  padding: 4px;
+  gap: 4px;
+  padding: 2px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--card) 88%, transparent);
@@ -217,10 +217,10 @@ a { color: inherit; }
   background: transparent;
   color: var(--muted);
   border-radius: 999px;
-  width: 40px;
-  height: 36px;
+  width: 34px;
+  height: 30px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   display: grid;
   place-items: center;
 }
