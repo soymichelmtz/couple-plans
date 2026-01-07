@@ -258,19 +258,20 @@ html[data-theme="dark"] .view-toggle__btn.active {
   min-width: 0;
 }
 
+
 .plan-grid .plan-summary-left h3 {
   font-size: 13px;
   line-height: 1.15;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .plan-grid .plan-summary-left .small {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Hide list-only parts in compact grid */
