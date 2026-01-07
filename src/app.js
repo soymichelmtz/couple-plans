@@ -53,8 +53,34 @@ const state = {
     status: 'Pendiente',
     type: 'all',
     time: 'all',
+    tagTypes: [],
+    tagTimes: [],
   },
 };
+
+function toggleInArray(arr, value) {
+  const v = String(value);
+  const list = Array.isArray(arr) ? arr.slice() : [];
+  const idx = list.indexOf(v);
+  if (idx >= 0) list.splice(idx, 1);
+  else list.push(v);
+  return list;
+}
+
+function chooseOne(arr, value) {
+  const v = String(value);
+  const list = Array.isArray(arr) ? arr : [];
+  if (list.length === 1 && list[0] === v) return [];
+  return [v];
+}
+
+function syncTimeDropdownFromTags() {
+  if (!Array.isArray(state.filters.tagTimes) || state.filters.tagTimes.length !== 1) {
+    state.filters.time = 'all';
+    return;
+  }
+  state.filters.time = state.filters.tagTimes[0];
+}
 
 function load() {
   seedIfEmpty();
@@ -276,10 +302,40 @@ function setupDragAndDrop(listRoot, plans) {
     return elAt.closest('[data-plan-id]');
   };
 
+  const scrollBy = (dy) => {
+    if (!dy) return;
+    const el = document.scrollingElement || document.documentElement;
+    const max = (el.scrollHeight - el.clientHeight);
+    if (max <= 0) return;
+    const next = Math.max(0, Math.min(max, el.scrollTop + dy));
+    if (next === el.scrollTop) return;
+    el.scrollTop = next;
+  };
+
+  const edgeAutoScroll = (clientY) => {
+    // During dragging we disable native scroll via preventDefault(),
+    // so we add a small programmatic auto-scroll near viewport edges.
+    const margin = 70; // px
+    const maxSpeed = 18; // px per move
+    const vh = window.innerHeight || 0;
+    if (!vh) return;
+
+    let dy = 0;
+    if (clientY < margin) {
+      const t = (margin - clientY) / margin; // 0..1
+      dy = -Math.round(maxSpeed * t);
+    } else if (clientY > vh - margin) {
+      const t = (clientY - (vh - margin)) / margin; // 0..1
+      dy = Math.round(maxSpeed * t);
+    }
+    scrollBy(dy);
+  };
+
   const onPointerMove = (ev) => {
     if (!draggingId) return;
     // prevent scroll while dragging
     ev.preventDefault();
+    edgeAutoScroll(ev.clientY);
     const over = getCardFromPoint(ev.clientX, ev.clientY);
     draggables.forEach((n) => n.classList.toggle('drag-over', n === over));
   };
@@ -348,6 +404,14 @@ function applyFilters(plans) {
     if (state.filters.status !== 'all' && p.status !== state.filters.status) return false;
     if (state.filters.type !== 'all' && p.type !== state.filters.type) return false;
     if (state.filters.time !== 'all' && p.time !== state.filters.time) return false;
+
+    // Tag filters (multi-select). If any selected, the plan must match one of them.
+    if (Array.isArray(state.filters.tagTypes) && state.filters.tagTypes.length) {
+      if (!state.filters.tagTypes.includes(p.type)) return false;
+    }
+    if (Array.isArray(state.filters.tagTimes) && state.filters.tagTimes.length) {
+      if (!state.filters.tagTimes.includes(p.time)) return false;
+    }
     return true;
   });
 
@@ -547,6 +611,7 @@ function renderHome() {
         state.homeTab === 'new'
           ? el('div', { className: 'card-inner', style: 'padding:0' }, renderPlanForm())
           : el('div', { className: 'grid' },
+              renderFilters(),
               statusQuick,
               renderPlanList(filtered),
             ),
@@ -557,47 +622,101 @@ function renderHome() {
 
 function renderFilters() {
   const qId = 'filter-q';
-  const statusId = 'filter-status';
-  const typeId = 'filter-type';
-  const timeId = 'filter-time';
 
   const onChange = () => {
     state.filters.q = document.getElementById(qId).value;
-    state.filters.status = document.getElementById(statusId).value;
-    state.filters.type = document.getElementById(typeId).value;
-    state.filters.time = document.getElementById(timeId).value;
     render();
   };
 
-  return el('div', { className: 'form-grid two' },
+  const tags = el('div', { className: 'tagbar', role: 'group', 'aria-label': 'Filtros por tipo y horario' },
+    el('button', {
+      className: `tag ${state.filters.tagTypes.includes('Comida') ? 'active' : ''}`,
+      type: 'button',
+      textContent: '🐷',
+      title: 'Tipo: Comida',
+      'aria-pressed': state.filters.tagTypes.includes('Comida') ? 'true' : 'false',
+      onclick: () => {
+        state.filters.tagTypes = chooseOne(state.filters.tagTypes, 'Comida');
+        state.filters.type = state.filters.tagTypes[0] || 'all';
+        render();
+      },
+    }),
+    el('button', {
+      className: `tag ${state.filters.tagTypes.includes('Visitar') ? 'active' : ''}`,
+      type: 'button',
+      textContent: '🚗',
+      title: 'Tipo: Visitar',
+      'aria-pressed': state.filters.tagTypes.includes('Visitar') ? 'true' : 'false',
+      onclick: () => {
+        state.filters.tagTypes = chooseOne(state.filters.tagTypes, 'Visitar');
+        state.filters.type = state.filters.tagTypes[0] || 'all';
+        render();
+      },
+    }),
+    el('span', { className: 'tag-sep', textContent: '·' }),
+    el('button', {
+      className: `tag ${state.filters.tagTimes.includes('Día') ? 'active' : ''}`,
+      type: 'button',
+      textContent: '🌤️',
+      title: 'Horario: Día',
+      'aria-pressed': state.filters.tagTimes.includes('Día') ? 'true' : 'false',
+      onclick: () => {
+        state.filters.tagTimes = toggleInArray(state.filters.tagTimes, 'Día');
+        syncTimeDropdownFromTags();
+        render();
+      },
+    }),
+    el('button', {
+      className: `tag ${state.filters.tagTimes.includes('Tarde') ? 'active' : ''}`,
+      type: 'button',
+      textContent: '☀️',
+      title: 'Horario: Tarde',
+      'aria-pressed': state.filters.tagTimes.includes('Tarde') ? 'true' : 'false',
+      onclick: () => {
+        state.filters.tagTimes = toggleInArray(state.filters.tagTimes, 'Tarde');
+        syncTimeDropdownFromTags();
+        render();
+      },
+    }),
+    el('button', {
+      className: `tag ${state.filters.tagTimes.includes('Noche') ? 'active' : ''}`,
+      type: 'button',
+      textContent: '🌑',
+      title: 'Horario: Noche',
+      'aria-pressed': state.filters.tagTimes.includes('Noche') ? 'true' : 'false',
+      onclick: () => {
+        state.filters.tagTimes = toggleInArray(state.filters.tagTimes, 'Noche');
+        syncTimeDropdownFromTags();
+        render();
+      },
+    }),
+    (state.filters.tagTypes.length || state.filters.tagTimes.length) ? el('button', {
+      className: 'tag clear',
+      type: 'button',
+      textContent: '✕',
+      title: 'Limpiar tags',
+      onclick: () => {
+        state.filters.tagTypes = [];
+        state.filters.tagTimes = [];
+
+        // Keep dropdowns consistent with cleared tags
+        state.filters.type = 'all';
+        state.filters.time = 'all';
+        render();
+      },
+    }) : null,
+  );
+
+  return el('div', { className: 'grid' },
+    el('div', { className: 'form-grid two' },
     el('div', {},
       el('label', { htmlFor: qId, textContent: 'Buscar' }),
-      el('input', { id: qId, className: 'input', placeholder: 'Ej. mirador, parque…', value: state.filters.q, oninput: onChange }),
+  el('input', { id: qId, className: 'input', value: state.filters.q, oninput: onChange }),
+    ),
     ),
     el('div', {},
-      el('label', { htmlFor: statusId, textContent: 'Estatus' }),
-      el('select', { id: statusId, onchange: onChange },
-        el('option', { value: 'all', textContent: 'Todos' }),
-        el('option', { value: 'Pendiente', textContent: 'Pendiente' }),
-        el('option', { value: 'Completado', textContent: 'Completado' }),
-      ),
-    ),
-    el('div', {},
-      el('label', { htmlFor: typeId, textContent: 'Tipo' }),
-      el('select', { id: typeId, onchange: onChange },
-        el('option', { value: 'all', textContent: 'Todos' }),
-        el('option', { value: 'Comida', textContent: 'Comida' }),
-        el('option', { value: 'Visitar', textContent: 'Visitar' }),
-      ),
-    ),
-    el('div', {},
-      el('label', { htmlFor: timeId, textContent: 'Horario' }),
-      el('select', { id: timeId, onchange: onChange },
-        el('option', { value: 'all', textContent: 'Todos' }),
-        el('option', { value: 'Día', textContent: 'Día' }),
-        el('option', { value: 'Tarde', textContent: 'Tarde' }),
-        el('option', { value: 'Noche', textContent: 'Noche' }),
-      ),
+      el('div', { className: 'small', style: 'margin-top:2px' , textContent: 'Tags:' }),
+      tags,
     ),
   );
 }
@@ -752,7 +871,7 @@ function renderPlanForm() {
         el('label', { htmlFor: ids.time, textContent: 'Horario' }),
         el('select', { id: ids.time },
           el('option', { value: 'Día', textContent: '🌤️ Día' }),
-          el('option', { value: 'Tarde', textContent: '🌇 Tarde' }),
+          el('option', { value: 'Tarde', textContent: '☀️ Tarde' }),
           el('option', { value: 'Noche', textContent: '🌑 Noche' }),
         ),
       ),
@@ -845,7 +964,7 @@ function renderStars(rootId, initial) {
 
 function renderPlanList(plans) {
   if (!plans.length) {
-    return el('div', { className: 'small', textContent: 'Aún no hay planes con esos filtros. Agrega uno a la izquierda.' });
+    return el('div', { className: 'small', textContent: 'Aún no hay planes con esos filtros.' });
   }
 
   const formatDateDMY = (value) => {
@@ -868,7 +987,7 @@ function renderPlanList(plans) {
 
     const typeEmoji = p.type === 'Comida' ? '🐷' : '🚗';
     const typeLabel = p.type === 'Comida' ? '🐷 Comida' : '🚗 Visitar';
-    const timeEmoji = p.time === 'Día' ? '🌤️' : p.time === 'Tarde' ? '🌇' : '🌑';
+  const timeEmoji = p.time === 'Día' ? '🌤️' : p.time === 'Tarde' ? '☀️' : '🌑';
     const timeLabel = `${timeEmoji} ${p.time}`;
     const titlePrefix = `${typeEmoji}${timeEmoji} `;
 
