@@ -692,10 +692,9 @@ function renderHome() {
           ? el('div', { className: 'card-inner', style: 'padding:0' }, renderPlanForm())
           : el('div', { className: 'grid' },
               renderFilters(),
-              el('div', { className: 'row space' },
-                statusQuick,
-                viewToggle,
-              ),
+              // status on one row, view toggle (and sort) on a new row below
+              el('div', { className: 'row' }, statusQuick),
+              el('div', { className: 'row' }, viewToggle),
               renderPlanList(filtered),
             ),
       ),
