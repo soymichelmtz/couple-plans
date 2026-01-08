@@ -594,28 +594,34 @@ function renderHome() {
     }),
   );
 
-  const statusQuick = el('div', { className: 'row space' },
-    el('div', { className: 'row' },
-      el('button', {
-        className: `pill-btn pending ${state.filters.status === 'Pendiente' ? 'active' : ''}`,
-        type: 'button',
-        textContent: 'Pendiente',
-        onclick: () => {
-          state.filters.status = 'Pendiente';
-          render();
-        },
-      }),
-      el('button', {
-        className: `pill-btn done ${state.filters.status === 'Completado' ? 'active' : ''}`,
-        type: 'button',
-        textContent: 'Completado',
-        onclick: () => {
-          state.filters.status = 'Completado';
-          render();
-        },
-      }),
+  // Top: status pills + view-toggle on same row; Bottom: small counter on its own row
+  const statusQuick = el('div', { className: 'grid' },
+    el('div', { className: 'row space' },
+      el('div', { className: 'row' },
+        el('button', {
+          className: `pill-btn pending ${state.filters.status === 'Pendiente' ? 'active' : ''}`,
+          type: 'button',
+          textContent: 'Pendiente',
+          onclick: () => {
+            state.filters.status = 'Pendiente';
+            render();
+          },
+        }),
+        el('button', {
+          className: `pill-btn done ${state.filters.status === 'Completado' ? 'active' : ''}`,
+          type: 'button',
+          textContent: 'Completado',
+          onclick: () => {
+            state.filters.status = 'Completado';
+            render();
+          },
+        }),
+      ),
+      // place viewToggle as a direct child of the .row.space so CSS pushes it right
+      viewToggle,
     ),
-    el('div', { className: 'small', textContent: `${filtered.length} de ${state.plans.length}` }),
+    // small counter on its own line below
+    el('div', { className: 'row' }, el('div', { className: 'small', textContent: `${filtered.length} de ${state.plans.length}` })),
   );
 
   const viewToggle = el('div', { className: 'view-toggle', role: 'group', 'aria-label': 'Vista de planes' },
@@ -692,10 +698,8 @@ function renderHome() {
           ? el('div', { className: 'card-inner', style: 'padding:0' }, renderPlanForm())
           : el('div', { className: 'grid' },
               renderFilters(),
-              // status on one row, view toggle (and sort) on a new row below
+              // status pills and view toggle on the same row; small counter below
               el('div', { className: 'row' }, statusQuick),
-              // use .row.right so the toggle is aligned to the right
-              el('div', { className: 'row right' }, viewToggle),
               renderPlanList(filtered),
             ),
       ),
