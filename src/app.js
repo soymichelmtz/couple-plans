@@ -647,7 +647,7 @@ function renderHome() {
       type: 'button',
       title: 'Orden A↑',
       'aria-pressed': state.sort === 'az' ? 'true' : 'false',
-      innerHTML: '<svg width="28" height="14" viewBox="0 0 28 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text x="1" y="10" font-size="10" font-family="sans-serif" fill="currentColor">A</text><path d="M24 11 L24 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M21 6 L24 3 L27 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  innerHTML: '<svg width="28" height="14" viewBox="0 0 28 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text x="1" y="10" font-size="10" font-family="sans-serif" fill="currentColor">A</text><path d="M18 11 L18 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M15 6 L18 3 L21 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       onclick: () => {
         state.sort = state.sort === 'az' ? 'none' : 'az';
         render();
@@ -658,7 +658,7 @@ function renderHome() {
       type: 'button',
       title: 'Orden Z↓',
       'aria-pressed': state.sort === 'za' ? 'true' : 'false',
-      innerHTML: '<svg width="28" height="14" viewBox="0 0 28 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text x="1" y="10" font-size="10" font-family="sans-serif" fill="currentColor">Z</text><path d="M24 3 L24 11" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M21 8 L24 11 L27 8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  innerHTML: '<svg width="28" height="14" viewBox="0 0 28 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text x="1" y="10" font-size="10" font-family="sans-serif" fill="currentColor">Z</text><path d="M18 3 L18 11" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M15 8 L18 11 L21 8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       onclick: () => {
         state.sort = state.sort === 'za' ? 'none' : 'za';
         render();
