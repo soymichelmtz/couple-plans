@@ -715,10 +715,12 @@ html:not([data-theme="dark"]) .pill.ok {
    compact/mobile rows. Keep it compact and prevent it from growing. */
 .row.space > .small {
   flex: 0 0 auto;       /* don't grow or shrink */
-  font-size: 11px;      /* slightly smaller to fit better on small screens */
+  font-size: 10px;      /* slightly smaller to fit better on small screens */
   color: var(--muted2);
   white-space: nowrap;  /* avoid wrapping the text */
-  margin-left: 8px;     /* small gap from the left block */
+  margin: 0 4px;        /* reduce left/right gap around the counter */
+  padding: 0;           /* remove any extra internal spacing */
+  line-height: 1;       /* slightly tighter line height */
 }
 
 .footer {
