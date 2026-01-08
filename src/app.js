@@ -451,7 +451,7 @@ function renderTopbar() {
   return el('header', { className: 'topbar' },
     el('div', { className: 'topbar-inner' },
       el('div', { className: 'brand' },
-        el('div', { className: 'brand-logo', innerHTML: '<img alt="" src="./assets/icon.svg" width="22" height="22" />' }),
+  el('div', { className: 'brand-logo', innerHTML: '<img alt="" src="./assets/couple-plans.svg" width="22" height="22" />' }),
         el('div', { className: 'brand-title' },
           el('strong', { textContent: 'Couple Plans' }),
           el('span', {

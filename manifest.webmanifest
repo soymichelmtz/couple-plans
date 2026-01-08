@@ -7,7 +7,7 @@
   "theme_color": "#111827",
   "icons": [
     {
-      "src": "./assets/couple-plans-logo.svg",
+      "src": "./assets/couple-plans.svg",
       "sizes": "128x128",
       "type": "image/svg+xml",
       "purpose": "any"
