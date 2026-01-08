@@ -220,6 +220,8 @@ a { color: inherit; }
      the right-side counter/toggle doesn't get pushed all the way to the edge. */
   flex: 0.6 1 auto;
   min-width: 0;
+  /* give a little breathing room between the left pills and the view-toggle */
+  margin-right: 12px;
 }
 
 .view-toggle__btn {
