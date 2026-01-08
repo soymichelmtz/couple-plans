@@ -694,7 +694,8 @@ function renderHome() {
               renderFilters(),
               // status on one row, view toggle (and sort) on a new row below
               el('div', { className: 'row' }, statusQuick),
-              el('div', { className: 'row' }, viewToggle),
+              // use .row.right so the toggle is aligned to the right
+              el('div', { className: 'row right' }, viewToggle),
               renderPlanList(filtered),
             ),
       ),

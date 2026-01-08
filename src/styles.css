@@ -205,6 +205,9 @@ a { color: inherit; }
   margin-left: auto; /* push to the right */
 }
 
+/* Utility to right-align contents of a row */
+.row.right { justify-content: flex-end; }
+
 /* Allow the left-side content in the spaced row to shrink so the toggle can stay on one line */
 .row.space > .row:first-child {
   /* Reduce how much the left-side block expands inside spaced rows so
