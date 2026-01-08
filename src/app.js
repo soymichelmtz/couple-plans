@@ -645,9 +645,9 @@ function renderHome() {
     el('button', {
       className: `view-toggle__btn ${state.sort === 'az' ? 'active' : ''}`,
       type: 'button',
-      title: 'Orden A→Z',
+      title: 'Orden A↑',
       'aria-pressed': state.sort === 'az' ? 'true' : 'false',
-      textContent: 'A→Z',
+      innerHTML: '<svg width="28" height="14" viewBox="0 0 28 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text x="1" y="10" font-size="10" font-family="sans-serif" fill="currentColor">A</text><path d="M24 11 L24 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M21 6 L24 3 L27 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       onclick: () => {
         state.sort = state.sort === 'az' ? 'none' : 'az';
         render();
@@ -656,9 +656,9 @@ function renderHome() {
     el('button', {
       className: `view-toggle__btn ${state.sort === 'za' ? 'active' : ''}`,
       type: 'button',
-      title: 'Orden Z→A',
+      title: 'Orden Z↓',
       'aria-pressed': state.sort === 'za' ? 'true' : 'false',
-      textContent: 'Z→A',
+      innerHTML: '<svg width="28" height="14" viewBox="0 0 28 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text x="1" y="10" font-size="10" font-family="sans-serif" fill="currentColor">Z</text><path d="M24 3 L24 11" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M21 8 L24 11 L27 8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       onclick: () => {
         state.sort = state.sort === 'za' ? 'none' : 'za';
         render();
