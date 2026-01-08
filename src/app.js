@@ -50,6 +50,7 @@ const state = {
   editingId: null,
   homeTab: 'plans', // 'new' | 'plans'
   viewMode: 'list', // 'list' | 'compact'
+  sort: 'none', // 'none' | 'az' | 'za'
   filters: {
     q: '',
     status: 'Pendiente',
@@ -425,7 +426,7 @@ function applyFilters(plans) {
     return true;
   });
 
-  // Order: favorites first, then manual priority (order), then updatedAt desc
+  // Order: if user requested alphabetical sort, apply it; otherwise use favorites/order/updatedAt
   const ts = (v) => {
     if (!v) return 0;
     if (typeof v === 'string') return Date.parse(v) || 0;
@@ -434,7 +435,28 @@ function applyFilters(plans) {
     return 0;
   };
 
-  return filtered.slice().sort((a, b) => {
+  const coll = filtered.slice();
+
+  if (state.sort === 'az' || state.sort === 'za') {
+    const dir = state.sort === 'az' ? 1 : -1;
+    coll.sort((a, b) => {
+      const pa = String(a.place || '').trim().toLowerCase();
+      const pb = String(b.place || '').trim().toLowerCase();
+      if (pa < pb) return -1 * dir;
+      if (pa > pb) return 1 * dir;
+      // tie-breaker: favorites, then manual order, then updatedAt
+      const favA = a.isFavorite ? 1 : 0;
+      const favB = b.isFavorite ? 1 : 0;
+      if (favA !== favB) return favB - favA;
+      const oa = Number.isFinite(Number(a.order)) ? Number(a.order) : 0;
+      const ob = Number.isFinite(Number(b.order)) ? Number(b.order) : 0;
+      if (oa !== ob) return oa - ob;
+      return ts(b.updatedAt) - ts(a.updatedAt);
+    });
+    return coll;
+  }
+
+  return coll.sort((a, b) => {
     const favA = a.isFavorite ? 1 : 0;
     const favB = b.isFavorite ? 1 : 0;
     if (favA !== favB) return favB - favA;
@@ -616,6 +638,29 @@ function renderHome() {
       textContent: '▦',
       onclick: () => {
         state.viewMode = 'compact';
+        render();
+      },
+    }),
+    // Alphabetical sort buttons (A→Z, Z→A)
+    el('button', {
+      className: `view-toggle__btn ${state.sort === 'az' ? 'active' : ''}`,
+      type: 'button',
+      title: 'Orden A→Z',
+      'aria-pressed': state.sort === 'az' ? 'true' : 'false',
+      textContent: 'A→Z',
+      onclick: () => {
+        state.sort = state.sort === 'az' ? 'none' : 'az';
+        render();
+      },
+    }),
+    el('button', {
+      className: `view-toggle__btn ${state.sort === 'za' ? 'active' : ''}`,
+      type: 'button',
+      title: 'Orden Z→A',
+      'aria-pressed': state.sort === 'za' ? 'true' : 'false',
+      textContent: 'Z→A',
+      onclick: () => {
+        state.sort = state.sort === 'za' ? 'none' : 'za';
         render();
       },
     }),
