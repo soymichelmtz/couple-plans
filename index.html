@@ -16,6 +16,33 @@
     <noscript>Esta app necesita JavaScript para funcionar.</noscript>
     <div id="app" class="app"></div>
 
+    <!-- Error overlay for JS runtime issues (helps debugging when HOME is blank) -->
+    <script>
+      (function(){
+        function showError(msg){
+          try{
+            var root = document.getElementById('app') || document.body;
+            var box = document.getElementById('__app_error_overlay');
+            if(!box){
+              box = document.createElement('div');
+              box.id = '__app_error_overlay';
+              box.style.cssText = 'position:fixed;left:12px;right:12px;top:12px;padding:12px;border-radius:8px;background:#fff6f6;color:#8b0000;z-index:9999;font-family:system-ui,Segoe UI,Arial;font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,0.12);';
+              root.insertBefore(box, root.firstChild);
+            }
+            box.textContent = 'JS ERROR: ' + msg;
+          }catch(e){
+            /* ignore */
+          }
+        }
+        window.addEventListener('error', function(ev){
+          showError((ev && ev.message) || String(ev));
+        });
+        window.addEventListener('unhandledrejection', function(ev){
+          showError((ev && ev.reason && ev.reason.message) || String(ev && ev.reason) || 'Unhandled rejection');
+        });
+      })();
+    </script>
+
   <script type="module" src="./src/app.js?v=20260107d"></script>
   </body>
 </html>
