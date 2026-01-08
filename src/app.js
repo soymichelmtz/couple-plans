@@ -867,6 +867,18 @@ function renderPlanForm() {
     className: 'grid',
     onsubmit: async (e) => {
       e.preventDefault();
+      // Prevent duplicate plan names (case-insensitive) when creating a new plan
+      const placeEl = document.getElementById(ids.place);
+      const placeVal = String(placeEl?.value || '').trim();
+      if (!placeVal) {
+        toast('Escribe un lugar.');
+        return;
+      }
+      const duplicate = state.plans.some((p) => String(p.place || '').trim().toLowerCase() === placeVal.toLowerCase() && p.id !== plan?.id);
+      if (duplicate) {
+        toast('Ya existe un plan con ese nombre.');
+        return;
+      }
       const status = document.getElementById(ids.status).value;
       const rating = Number(document.querySelector(`#${ratingRootId} input[name="rating"]`)?.value || 0);
       const payload = {
