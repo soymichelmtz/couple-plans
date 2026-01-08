@@ -126,4 +126,4 @@ Notas:
 
 Controles UI recientes
 - Los botones de orden ahora muestran iconos A↑ (orden ascendente) y Z↓ (orden descendente) cerca de la esquina superior derecha de la lista; la caja de controles (`.view-toggle`) se alinea a la derecha.
-- El logo de la app está en `assets/couple-plans.svg`.
+- El logo de la app está en `assets/couple-plans-png.png`.
