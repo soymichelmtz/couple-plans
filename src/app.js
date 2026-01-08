@@ -594,36 +594,8 @@ function renderHome() {
     }),
   );
 
-  // Top: status pills + view-toggle on same row; Bottom: small counter on its own row
-  const statusQuick = el('div', { className: 'grid' },
-    el('div', { className: 'row space' },
-      el('div', { className: 'row' },
-        el('button', {
-          className: `pill-btn pending ${state.filters.status === 'Pendiente' ? 'active' : ''}`,
-          type: 'button',
-          textContent: 'Pendiente',
-          onclick: () => {
-            state.filters.status = 'Pendiente';
-            render();
-          },
-        }),
-        el('button', {
-          className: `pill-btn done ${state.filters.status === 'Completado' ? 'active' : ''}`,
-          type: 'button',
-          textContent: 'Completado',
-          onclick: () => {
-            state.filters.status = 'Completado';
-            render();
-          },
-        }),
-      ),
-      // place viewToggle as a direct child of the .row.space so CSS pushes it right
-      viewToggle,
-    ),
-    // small counter on its own line below
-    el('div', { className: 'row' }, el('div', { className: 'small', textContent: `${filtered.length} de ${state.plans.length}` })),
-  );
-
+  // Alphabetical sort / view toggle: create the control first so it can be
+  // referenced when building the statusQuick block below (avoid TDZ).
   const viewToggle = el('div', { className: 'view-toggle', role: 'group', 'aria-label': 'Vista de planes' },
     el('button', {
       className: `view-toggle__btn ${state.viewMode === 'list' ? 'active' : ''}`,
@@ -670,6 +642,36 @@ function renderHome() {
         render();
       },
     }),
+  );
+
+  // Top: status pills + view-toggle on same row; Bottom: small counter on its own row
+  const statusQuick = el('div', { className: 'grid' },
+    el('div', { className: 'row space' },
+      el('div', { className: 'row' },
+        el('button', {
+          className: `pill-btn pending ${state.filters.status === 'Pendiente' ? 'active' : ''}`,
+          type: 'button',
+          textContent: 'Pendiente',
+          onclick: () => {
+            state.filters.status = 'Pendiente';
+            render();
+          },
+        }),
+        el('button', {
+          className: `pill-btn done ${state.filters.status === 'Completado' ? 'active' : ''}`,
+          type: 'button',
+          textContent: 'Completado',
+          onclick: () => {
+            state.filters.status = 'Completado';
+            render();
+          },
+        }),
+      ),
+      // place viewToggle as a direct child of the .row.space so CSS pushes it right
+      viewToggle,
+    ),
+  // small counter on its own line below (right-aligned)
+  el('div', { className: 'row right' }, el('div', { className: 'small', textContent: `${filtered.length} ${filtered.length === 1 ? 'plan filtrado' : 'planes filtrados'} de ${state.plans.length}` })),
   );
 
   return el('main', { className: 'container' },
