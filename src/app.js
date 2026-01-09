@@ -802,6 +802,8 @@ function renderFilters() {
         render();
       },
     }),
+    // separator between time tags and owner tags
+    el('span', { className: 'tag-sep', textContent: '·' }),
     // Owner tags: sarahi first, then michel (multi-select)
     el('button', {
       className: `tag ${state.filters.tagOwners.includes('sarahi') ? 'active' : ''}`,

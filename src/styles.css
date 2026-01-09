@@ -331,7 +331,7 @@ html[data-theme="dark"] .view-toggle__btn.active {
   background: rgba(255,255,255,0.06);
   color: var(--text);
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 8px 6px;
   min-width: 40px;
   height: 38px;
   display: inline-flex;
