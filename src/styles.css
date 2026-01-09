@@ -60,6 +60,13 @@ html, body {
   color: var(--text);
 }
 
+/* Keep vertical scrollbar layout stable to avoid horizontal shifts when content
+   changes (prevents card/container width jumping when the page gets taller).
+   `scrollbar-gutter` is modern; `overflow-y: scroll` ensures a scrollbar on
+   Windows so width stays consistent. */
+html { scrollbar-gutter: stable; }
+body { overflow-y: scroll; }
+
 a { color: inherit; }
 
 .app {
