@@ -570,6 +570,15 @@ label {
   transform: translateY(1px);
 }
 
+/* Map action button (distinctive color) */
+.icon-action.map {
+  color: #1E8FCD; /* custom blue */
+}
+.icon-action.map:hover {
+  background: color-mix(in srgb, #1E8FCD 12%, var(--card));
+  border-color: color-mix(in srgb, #1E8FCD 18%, transparent);
+}
+
 /* Modal */
 .modal-overlay {
   position: fixed;

@@ -207,6 +207,7 @@ function sanitizePlanInput(input) {
     time: ['Día', 'Tarde', 'Noche'].includes(input.time) ? input.time : 'Noche',
     status: input.status === 'Completado' ? 'Completado' : 'Pendiente',
     location: String(input.location || '').trim(),
+    googleMapLink: String(input.googleMapLink || '').trim(),
     rating: Number(input.rating || 0), // 0..5
     goAgain: input.goAgain === 'Sí' ? 'Sí' : 'No',
     isFavorite: Boolean(input.isFavorite),
@@ -868,6 +869,43 @@ function renderPlanForm() {
     }
 
     frame.src = src;
+
+    // Hide fallback by default; we'll show it if the iframe is blocked or errors.
+    const fallback = document.getElementById('map-fallback');
+    if (fallback) fallback.style.display = 'none';
+
+    // If there's no meaningful src, keep fallback hidden.
+    if (!src || src === 'about:blank') {
+      if (fallback) fallback.style.display = 'none';
+      return;
+    }
+
+    // Try to detect cross-origin / X-Frame-Options blocking.
+    // onload may still fire even when embedding is blocked, so we attempt a safe access
+    // to the iframe document; if it throws, we assume it's blocked and show the fallback.
+    try {
+      frame.onload = () => {
+        try {
+          // Accessing contentDocument for cross-origin frames will throw in most browsers.
+          const doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+          // If accessible and seems to have a body, assume embed worked.
+          if (doc && doc.body) {
+            if (fallback) fallback.style.display = 'none';
+            return;
+          }
+        } catch (err) {
+          if (fallback) fallback.style.display = '';
+          return;
+        }
+      };
+    } catch (err) {
+      // Defensive: if something goes wrong assigning handlers, show fallback.
+      if (fallback) fallback.style.display = '';
+    }
+
+    frame.onerror = () => {
+      if (fallback) fallback.style.display = '';
+    };
   };
 
   const ratingRootId = 'plan-rating';
@@ -994,6 +1032,29 @@ function renderPlanForm() {
           loading: 'lazy',
           referrerpolicy: 'no-referrer',
         }),
+        // Fallback UI: shown when the iframe cannot display the map (X-Frame-Options, etc.)
+        el('div', { id: 'map-fallback', style: `display:${plan?.googleMapLink ? 'none' : 'none'}; margin-top:8px` },
+          el('div', { className: 'row' },
+            el('button', {
+              id: 'map-open-btn',
+              className: 'btn',
+              type: 'button',
+              textContent: 'Abrir en Google Maps',
+              onclick: () => {
+                const raw = document.getElementById(mapLinkId)?.value || '';
+                let openUrl = raw || '';
+                try {
+                  // If raw is not an absolute URL, fallback to a search URL
+                  new URL(raw);
+                } catch (e) {
+                  openUrl = 'https://www.google.com/maps?q=' + encodeURIComponent(raw || '');
+                }
+                if (openUrl) window.open(openUrl, '_blank', 'noopener');
+              },
+            }),
+            el('div', { className: 'small', style: 'margin-left:8px', textContent: 'Si el mapa no se muestra aquí, ábrelo en Google Maps.' }),
+          ),
+        ),
       ),
     ),
 
@@ -1208,6 +1269,21 @@ function renderPlanList(plans) {
           p.status === 'Completado' ? el('span', { className: 'pill', textContent: `Calificación: ${ratingText}` }) : null,
         ),
         el('div', { className: 'plan-actions' },
+          (p.googleMapLink ? el('button', {
+            className: 'icon-action map',
+            type: 'button',
+            title: 'Abrir en Maps',
+            'aria-label': 'Abrir en Google Maps',
+            // Use inline SVG (map pin) instead of emoji for a polished icon
+            innerHTML: '<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>',
+            onclick: (e) => {
+              e.preventDefault();
+              const raw = p.googleMapLink || '';
+              let openUrl = raw;
+              try { new URL(raw); } catch (err) { openUrl = 'https://www.google.com/maps?q=' + encodeURIComponent(raw || ''); }
+              if (openUrl) window.open(openUrl, '_blank', 'noopener');
+            },
+          }) : null),
           el('button', {
             className: 'icon-action',
             type: 'button',
