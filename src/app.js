@@ -806,7 +806,7 @@ function renderFilters() {
     el('button', {
       className: `tag ${state.filters.tagOwners.includes('sarahi') ? 'active' : ''}`,
       type: 'button',
-      textContent: '👧',
+      textContent: '👧🏼',
       title: 'Registrado por: Sarahi',
       'aria-pressed': state.filters.tagOwners.includes('sarahi') ? 'true' : 'false',
       onclick: () => {
@@ -817,7 +817,7 @@ function renderFilters() {
     el('button', {
       className: `tag ${state.filters.tagOwners.includes('michel') ? 'active' : ''}`,
       type: 'button',
-      textContent: '👦',
+      textContent: '👦🏻',
       title: 'Registrado por: Michel',
       'aria-pressed': state.filters.tagOwners.includes('michel') ? 'true' : 'false',
       onclick: () => {
