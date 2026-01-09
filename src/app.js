@@ -845,9 +845,29 @@ function renderPlanForm() {
     const linkInput = document.getElementById(mapLinkId);
     const frame = document.getElementById(mapFrameId);
     if (!frame) return;
-    const q = linkInput ? linkInput.value.trim() : '';
-    // If user pasted a Google Maps short/app link, we try to use it directly.
-    frame.src = q ? q : 'about:blank';
+    const raw = linkInput ? linkInput.value.trim() : '';
+    if (!raw) {
+      frame.src = 'about:blank';
+      return;
+    }
+
+    // Prefer an embeddable Google Maps URL when the user provided a Google maps share/short link.
+    // Many short links (maps.app.goo.gl, goo.gl/maps) redirect and are not directly embeddable,
+    // so we convert them into a search/embed URL that works in an <iframe> most of the time.
+    let src = raw;
+    try {
+      const u = new URL(raw);
+      const host = u.hostname.toLowerCase();
+      if (host.includes('maps.app.goo.gl') || host.includes('goo.gl') || host.includes('google') && u.pathname.includes('/maps')) {
+        // Build a generic embed/search URL that works for addresses and short links.
+        src = 'https://www.google.com/maps?q=' + encodeURIComponent(raw) + '&output=embed';
+      }
+    } catch (e) {
+      // If it's not a valid absolute URL, still try to search it on google maps.
+      src = 'https://www.google.com/maps?q=' + encodeURIComponent(raw) + '&output=embed';
+    }
+
+    frame.src = src;
   };
 
   const ratingRootId = 'plan-rating';
