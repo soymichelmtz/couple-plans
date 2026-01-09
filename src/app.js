@@ -68,6 +68,27 @@ function getPlanEmojis(p) {
   return { typeEmoji, timeEmoji };
 }
 
+// Normalize owner/key for matching (returns a short key like 'sarahi' or 'michel')
+function getOwnerKey(p) {
+  const raw = p?.createdBy ?? p?.completedBy ?? '';
+  if (!raw) return '';
+  if (typeof raw === 'string') {
+    const s = raw.trim().toLowerCase();
+    const at = s.indexOf('@');
+    if (at > 0) return s.slice(0, at);
+    if (s.includes(' ')) return s.split(/\s+/)[0];
+    return s;
+  }
+  if (typeof raw === 'object') {
+    const maybe = String(raw.email || raw.displayName || raw.username || '').trim().toLowerCase();
+    const at = maybe.indexOf('@');
+    if (at > 0) return maybe.slice(0, at);
+    if (maybe.includes(' ')) return maybe.split(/\s+/)[0];
+    return maybe;
+  }
+  return '';
+}
+
 function toggleInArray(arr, value) {
   const v = String(value);
   const list = Array.isArray(arr) ? arr.slice() : [];
@@ -96,7 +117,21 @@ function load() {
   seedIfEmpty();
   // Keep local data for migration fallback
   state.session = null;
-  state.plans = [];
+  // Load existing plans from local storage and migrate only those missing createdBy
+  try {
+    const stored = Storage.getPlans();
+    state.plans = Array.isArray(stored) ? stored.map((p) => {
+      const hasCreated = p && p.createdBy && String(p.createdBy).trim();
+      const createdBy = hasCreated ? p.createdBy : 'michel@couple-plans.local';
+      // ownerKey: if present keep, otherwise derive from createdBy
+      const ownerKey = hasCreated ? (p.ownerKey || getOwnerKey({ createdBy })) : 'michel';
+      return { ...p, createdBy, ownerKey };
+    }) : [];
+    // Persist only if we modified any entry (safe to resave to ensure consistency)
+    savePlans();
+  } catch (err) {
+    state.plans = [];
+  }
   state.locations = [];
 }
 
@@ -209,7 +244,11 @@ function sanitizePlanInput(input) {
     status: input.status === 'Completado' ? 'Completado' : 'Pendiente',
     location: String(input.location || '').trim(),
     googleMapLink: String(input.googleMapLink || '').trim(),
-  createdBy: input.createdBy ?? state.session?.username ?? null,
+  // Ensure createdBy is always populated from the session when missing/undefined
+  // Prefer session.email so stored createdBy is the user's email address.
+  createdBy: (typeof input.createdBy === 'string' && input.createdBy.trim())
+    ? input.createdBy.trim()
+    : (state.session?.email || state.session?.username || null),
     rating: Number(input.rating || 0), // 0..5
     goAgain: input.goAgain === 'Sí' ? 'Sí' : 'No',
     isFavorite: Boolean(input.isFavorite),
@@ -253,6 +292,8 @@ function deletePlan(id) {
 
 async function upsertPlanCloud(plan) {
   // Always keep local mirror (for offline-ish UX), then write to cloud
+  // Defensive: ensure createdBy is populated before local/cloud persist
+  if (!plan.createdBy) plan.createdBy = state.session?.email || state.session?.username || null;
   upsertPlan(plan);
   if (!state.cloudReady) return;
   await cloud.upsertPlan(plan);
@@ -426,11 +467,15 @@ function applyFilters(plans) {
     if (Array.isArray(state.filters.tagTimes) && state.filters.tagTimes.length) {
       if (!state.filters.tagTimes.includes(p.time)) return false;
     }
-    // Owner filters: if any selected, the plan must have been created by one of them
+    // Owner filters: if any selected, the plan must match one of the selected owner keys
     if (Array.isArray(state.filters.tagOwners) && state.filters.tagOwners.length) {
-      const ownerRaw = String(p.createdBy || p.completedBy || '').toLowerCase();
-      // Match if the stored owner string contains the selected owner key (handles emails or usernames)
-      const matches = state.filters.tagOwners.some((k) => ownerRaw.includes(String(k || '').toLowerCase()));
+      const ownerKey = getOwnerKey(p); // normalized short key (eg. 'sarahi')
+      const matches = state.filters.tagOwners.some((k) => {
+        const sel = String(k || '').toLowerCase();
+        if (!ownerKey) return false;
+        // accept exact match or containment (defensive)
+        return ownerKey === sel || ownerKey.includes(sel) || sel.includes(ownerKey);
+      });
       if (!matches) return false;
     }
     return true;
@@ -1511,12 +1556,26 @@ cloud.onAuth(async (userOrInfo) => {
 
     cloud.onPlans((plans) => {
       // Firestore timestamps may be objects; normalize for UI
-      state.plans = plans.map((p) => ({
-        ...p,
-        createdAt: p.createdAt?.toDate ? p.createdAt.toDate().toISOString() : p.createdAt,
-        updatedAt: p.updatedAt?.toDate ? p.updatedAt.toDate().toISOString() : p.updatedAt,
-        completedAt: p.completedAt?.toDate ? p.completedAt.toDate().toISOString() : p.completedAt,
-      }));
+      // Preserve createdBy/ownerKey from local storage when available so our
+      // local migration isn't overwritten by remote docs that lack those fields.
+      const localStored = Storage.getPlans();
+      state.plans = plans.map((p) => {
+        const normalized = {
+          ...p,
+          createdAt: p.createdAt?.toDate ? p.createdAt.toDate().toISOString() : p.createdAt,
+          updatedAt: p.updatedAt?.toDate ? p.updatedAt.toDate().toISOString() : p.updatedAt,
+          completedAt: p.completedAt?.toDate ? p.completedAt.toDate().toISOString() : p.completedAt,
+        };
+
+        const local = Array.isArray(localStored) ? localStored.find((lp) => lp.id === normalized.id) : null;
+        // prefer local.createdBy if present, else remote, else null
+        const createdBy = (local && local.createdBy) ? local.createdBy : (normalized.createdBy || null);
+        const ownerKey = (local && local.ownerKey)
+          ? local.ownerKey
+          : (normalized.ownerKey || getOwnerKey({ createdBy }) || getOwnerKey(normalized));
+
+        return { ...normalized, createdBy, ownerKey };
+      });
       savePlans();
       render();
     });
