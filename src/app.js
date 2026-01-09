@@ -712,9 +712,22 @@ function renderHome() {
 function renderFilters() {
   const qId = 'filter-q';
 
-  const onChange = () => {
-    state.filters.q = document.getElementById(qId).value;
+  const onChange = (e) => {
+    // Preserve caret/focus across the main re-render so mobile keyboards don't hide.
+    const inputEl = e?.target || document.getElementById(qId);
+    const pos = (inputEl && typeof inputEl.selectionStart === 'number') ? inputEl.selectionStart : null;
+    state.filters.q = inputEl ? inputEl.value : document.getElementById(qId).value;
     render();
+    // Restore focus & caret position on the recreated input (best-effort).
+    const newEl = document.getElementById(qId);
+    if (newEl) {
+      try {
+        newEl.focus();
+        if (pos !== null) newEl.setSelectionRange(pos, pos);
+      } catch (err) {
+        // ignore - some mobile browsers may disallow programmatic focus/selection
+      }
+    }
   };
 
   const tags = el('div', { className: 'tagbar', role: 'group', 'aria-label': 'Filtros por tipo y horario' },
