@@ -1038,6 +1038,8 @@ function renderPlanForm() {
         status,
         rating: status === 'Completado' ? rating : 0,
         goAgain: status === 'Completado' ? document.getElementById(ids.goAgain).value : 'No',
+        // Preserve favorite status when editing (if not provided by the form)
+        isFavorite: typeof plan?.isFavorite === 'boolean' ? plan.isFavorite : false,
         googleMapLink: (document.getElementById(mapLinkId)?.value || '').trim(),
       };
 
