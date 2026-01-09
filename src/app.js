@@ -838,23 +838,16 @@ function renderPlanForm() {
 
   const locationListId = 'locations-list';
   const mapFrameId = 'location-map-frame';
-  const mapLinkId = 'location-map-link';
+  const mapLinkId = 'plan-google-map';
 
   const updateMapPreview = () => {
-    const input = document.getElementById(ids.location);
+    // Preview an optional Google Maps link entered by the user.
+    const linkInput = document.getElementById(mapLinkId);
     const frame = document.getElementById(mapFrameId);
-    const link = document.getElementById(mapLinkId);
-    if (!input || !frame || !link) return;
-    const q = input.value.trim();
-    const url = q
-      ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(q)}`
-      : 'about:blank';
-    link.href = url;
-    link.textContent = q ? 'Ver en mapa' : 'Ver en mapa';
-
-    // Embebido simple: mostrar el buscador de OSM dentro de un iframe.
-    // (No requiere API key; depende de que haya internet.)
-    frame.src = q ? url : 'about:blank';
+    if (!frame) return;
+    const q = linkInput ? linkInput.value.trim() : '';
+    // If user pasted a Google Maps short/app link, we try to use it directly.
+    frame.src = q ? q : 'about:blank';
   };
 
   const ratingRootId = 'plan-rating';
@@ -906,6 +899,7 @@ function renderPlanForm() {
         status,
         rating: status === 'Completado' ? rating : 0,
         goAgain: status === 'Completado' ? document.getElementById(ids.goAgain).value : 'No',
+        googleMapLink: (document.getElementById(mapLinkId)?.value || '').trim(),
       };
 
       try {
@@ -960,17 +954,27 @@ function renderPlanForm() {
         ...state.locations.map((loc) => el('option', { value: loc })),
       ),
       el('div', { className: 'help', textContent: 'Tip: escribe y selecciona una sugerencia. Si no existe, se guarda y aparecerá después.' }),
+      // Optional Google Maps link input (if provided, we show it embedded below)
       el('div', { className: 'row' },
-        el('a', { id: mapLinkId, className: 'btn small', href: 'about:blank', target: '_blank', rel: 'noreferrer', textContent: 'Ver en mapa' }),
+        el('label', { htmlFor: mapLinkId, textContent: 'Link de Google Maps (opcional)' }),
+        el('input', {
+          id: mapLinkId,
+          className: 'input',
+          placeholder: 'Ej. https://maps.app.goo.gl/dTPgNoWRp5Zi9dSTA',
+          value: plan?.googleMapLink ?? '',
+          oninput: () => updateMapPreview(),
+        }),
       ),
-      el('iframe', {
-        id: mapFrameId,
-        title: 'Mapa (OpenStreetMap)',
-        src: 'about:blank',
-        style: 'width:100%;height:220px;border:1px solid rgba(255,255,255,0.14);border-radius:14px;background:rgba(255,255,255,0.04);',
-        loading: 'lazy',
-        referrerpolicy: 'no-referrer',
-      }),
+      el('div', { style: 'margin-top:8px' },
+        el('iframe', {
+          id: mapFrameId,
+          title: 'Mapa (Google Maps)',
+          src: plan?.googleMapLink || 'about:blank',
+          style: 'width:100%;height:220px;border:1px solid rgba(255,255,255,0.14);border-radius:14px;background:rgba(255,255,255,0.04);',
+          loading: 'lazy',
+          referrerpolicy: 'no-referrer',
+        }),
+      ),
     ),
 
     el('div', { className: 'form-grid two' },
