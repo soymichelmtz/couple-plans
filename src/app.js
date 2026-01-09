@@ -58,6 +58,7 @@ const state = {
     time: 'all',
     tagTypes: [],
     tagTimes: [],
+    tagOwners: [],
   },
 };
 
@@ -208,6 +209,7 @@ function sanitizePlanInput(input) {
     status: input.status === 'Completado' ? 'Completado' : 'Pendiente',
     location: String(input.location || '').trim(),
     googleMapLink: String(input.googleMapLink || '').trim(),
+  createdBy: input.createdBy ?? state.session?.username ?? null,
     rating: Number(input.rating || 0), // 0..5
     goAgain: input.goAgain === 'Sí' ? 'Sí' : 'No',
     isFavorite: Boolean(input.isFavorite),
@@ -423,6 +425,13 @@ function applyFilters(plans) {
     }
     if (Array.isArray(state.filters.tagTimes) && state.filters.tagTimes.length) {
       if (!state.filters.tagTimes.includes(p.time)) return false;
+    }
+    // Owner filters: if any selected, the plan must have been created by one of them
+    if (Array.isArray(state.filters.tagOwners) && state.filters.tagOwners.length) {
+      const ownerRaw = String(p.createdBy || p.completedBy || '').toLowerCase();
+      // Match if the stored owner string contains the selected owner key (handles emails or usernames)
+      const matches = state.filters.tagOwners.some((k) => ownerRaw.includes(String(k || '').toLowerCase()));
+      if (!matches) return false;
     }
     return true;
   });
@@ -793,7 +802,30 @@ function renderFilters() {
         render();
       },
     }),
-    (state.filters.tagTypes.length || state.filters.tagTimes.length) ? el('button', {
+    // Owner tags: sarahi first, then michel (multi-select)
+    el('button', {
+      className: `tag ${state.filters.tagOwners.includes('sarahi') ? 'active' : ''}`,
+      type: 'button',
+      textContent: '👧',
+      title: 'Registrado por: Sarahi',
+      'aria-pressed': state.filters.tagOwners.includes('sarahi') ? 'true' : 'false',
+      onclick: () => {
+        state.filters.tagOwners = toggleInArray(state.filters.tagOwners, 'sarahi');
+        render();
+      },
+    }),
+    el('button', {
+      className: `tag ${state.filters.tagOwners.includes('michel') ? 'active' : ''}`,
+      type: 'button',
+      textContent: '👦',
+      title: 'Registrado por: Michel',
+      'aria-pressed': state.filters.tagOwners.includes('michel') ? 'true' : 'false',
+      onclick: () => {
+        state.filters.tagOwners = toggleInArray(state.filters.tagOwners, 'michel');
+        render();
+      },
+    }),
+    (state.filters.tagTypes.length || state.filters.tagTimes.length || state.filters.tagOwners.length) ? el('button', {
       className: 'tag clear',
       type: 'button',
       textContent: '✕',
@@ -801,6 +833,7 @@ function renderFilters() {
       onclick: () => {
         state.filters.tagTypes = [];
         state.filters.tagTimes = [];
+        state.filters.tagOwners = [];
 
         // Keep dropdowns consistent with cleared tags
         state.filters.type = 'all';
@@ -948,6 +981,7 @@ function renderPlanForm() {
       const payload = {
         id: plan?.id,
         createdAt: plan?.createdAt,
+        createdBy: plan?.createdBy,
         completedAt: plan?.completedAt,
         completedBy: plan?.completedBy,
         place: document.getElementById(ids.place).value,
