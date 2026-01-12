@@ -322,7 +322,7 @@ html[data-theme="dark"] .view-toggle__btn.active {
 .tagbar {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0px;
   flex-wrap: nowrap;
   overflow-x: auto;
   padding: 8px 2px;
