@@ -557,7 +557,7 @@ label {
 .plan-comment {
   text-align: justify;
   /* reserve horizontal space to prevent overlap with the absolute-positioned actions */
-  margin-right: 100px;
+  margin-right: 125px;
 }
 
 /* Show edit/delete only when the card is expanded */
