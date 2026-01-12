@@ -63,7 +63,7 @@ const state = {
 };
 
 function getPlanEmojis(p) {
-  const typeEmoji = p.type === 'Comida' ? '🐷' : '🚗';
+  const typeEmoji = p.type === 'Comida' ? '🐷' : (p.type === 'Cine' ? '🎬' : '🚗');
   const timeEmoji = p.time === 'Día' ? '🌤️' : p.time === 'Tarde' ? '☀️' : '🌑';
   return { typeEmoji, timeEmoji };
 }
@@ -239,7 +239,7 @@ function sanitizePlanInput(input) {
   const plan = {
     id: input.id ?? crypto.randomUUID(),
     place: String(input.place || '').trim(),
-    type: input.type === 'Comida' ? 'Comida' : 'Visitar',
+  type: ['Comida', 'Visitar', 'Cine'].includes(input.type) ? input.type : 'Visitar',
     time: ['Día', 'Tarde', 'Noche'].includes(input.time) ? input.time : 'Noche',
     status: input.status === 'Completado' ? 'Completado' : 'Pendiente',
     location: String(input.location || '').trim(),
@@ -813,6 +813,18 @@ function renderFilters() {
         render();
       },
     }),
+    el('button', {
+      className: `tag ${state.filters.tagTypes.includes('Cine') ? 'active' : ''}`,
+      type: 'button',
+      textContent: '🎬',
+      title: 'Tipo: Cine',
+      'aria-pressed': state.filters.tagTypes.includes('Cine') ? 'true' : 'false',
+      onclick: () => {
+        state.filters.tagTypes = chooseOne(state.filters.tagTypes, 'Cine');
+        state.filters.type = state.filters.tagTypes[0] || 'all';
+        render();
+      },
+    }),
     el('span', { className: 'tag-sep', textContent: '·' }),
     el('button', {
       className: `tag ${state.filters.tagTimes.includes('Día') ? 'active' : ''}`,
@@ -1152,6 +1164,7 @@ function renderPlanForm() {
         el('select', { id: ids.type },
           el('option', { value: 'Comida', textContent: '🐷 Comida' }),
           el('option', { value: 'Visitar', textContent: '🚗 Visitar' }),
+          el('option', { value: 'Cine', textContent: '🎬 Cine' }),
         ),
       ),
       el('div', {},
@@ -1341,8 +1354,8 @@ function renderPlanList(plans) {
       const isFav = Boolean(p.isFavorite);
 
     const { typeEmoji, timeEmoji } = getPlanEmojis(p);
-    const typeLabel = p.type === 'Comida' ? '🐷 Comida' : '🚗 Visitar';
-    const timeLabel = `${timeEmoji} ${p.time}`;
+  const typeLabel = `${typeEmoji} ${p.type}`;
+  const timeLabel = `${timeEmoji} ${p.time}`;
     const titlePrefix = `${typeEmoji}${timeEmoji} `;
 
       // Accordion card
