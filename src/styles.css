@@ -711,6 +711,19 @@ html:not([data-theme="dark"]) .pill.ok {
 }
 .pill.warn { border-color: rgba(251,146,60,0.25); background: rgba(251,146,60,0.10); }
 
+/* Explicit 'No' state for "Ir otra vez: No" -> red styling */
+.pill.no {
+  border-color: rgba(239,68,68,0.25);
+  color: rgba(255,255,255,0.92);
+  background: rgba(239,68,68,0.08);
+}
+
+html:not([data-theme="dark"]) .pill.no {
+  color: rgba(17, 24, 39, 0.88);
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
 .list {
   display: grid;
   gap: 10px;

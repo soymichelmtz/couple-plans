@@ -1375,7 +1375,7 @@ function renderPlanList(plans) {
         el('div', { className: 'meta meta--singleline' },
           el('span', { className: 'pill', textContent: typeLabel }),
           el('span', { className: 'pill', textContent: timeLabel }),
-          p.status === 'Completado' ? el('span', { className: 'pill ok', textContent: `Ir otra vez: ${p.goAgain}` }) : null,
+          p.status === 'Completado' ? el('span', { className: (p.goAgain === 'Sí' ? 'pill ok' : 'pill no'), textContent: `Ir otra vez: ${p.goAgain}` }) : null,
           p.status === 'Completado' ? el('span', { className: 'pill', textContent: `Calificación: ${ratingText}` }) : null,
     ),
     p.comment ? el('div', { className: 'plan-comment small', textContent: p.comment }) : null,
