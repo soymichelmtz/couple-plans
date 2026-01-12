@@ -259,6 +259,9 @@ function sanitizePlanInput(input) {
     completedBy: input.completedBy ?? null,
   };
 
+  // Normalize comment (limit to 500 chars)
+  plan.comment = String(input.comment || '').trim().slice(0, 500);
+
   if (!plan.place) throw new Error('Escribe un lugar.');
   if (!plan.location) throw new Error('Escribe una ubicación.');
   if (!Number.isFinite(plan.rating) || plan.rating < 0 || plan.rating > 5) {
@@ -1041,6 +1044,7 @@ function renderPlanForm() {
         // Preserve favorite status when editing (if not provided by the form)
         isFavorite: typeof plan?.isFavorite === 'boolean' ? plan.isFavorite : false,
         googleMapLink: (document.getElementById(mapLinkId)?.value || '').trim(),
+        comment: (document.getElementById('plan-comment')?.value || '').trim(),
       };
 
       try {
@@ -1138,6 +1142,23 @@ function renderPlanForm() {
             el('div', { className: 'small', style: 'margin-left:8px', textContent: 'Si el mapa no se muestra aquí, ábrelo en Google Maps.' }),
           ),
         ),
+      ),
+      // Optional comment field (max 500 chars)
+      el('div', { style: 'margin-top:8px' },
+        el('label', { htmlFor: 'plan-comment', textContent: 'Comentario (opcional)' }),
+        el('textarea', {
+          id: 'plan-comment',
+          className: 'input',
+          placeholder: 'Añade una nota o comentario (máx. 500 caracteres)',
+          maxlength: 500,
+          value: plan?.comment ?? '',
+          oninput: (e) => {
+            const elc = document.getElementById('plan-comment-count');
+            const v = e?.target?.value || '';
+            if (elc) elc.textContent = `${v.length}/500`;
+          },
+        }),
+        el('div', { className: 'small', id: 'plan-comment-count', style: 'margin-top:6px', textContent: `${(plan?.comment || '').length}/500` }),
       ),
     ),
 
@@ -1350,8 +1371,9 @@ function renderPlanList(plans) {
           el('span', { className: 'pill', textContent: timeLabel }),
           p.status === 'Completado' ? el('span', { className: 'pill ok', textContent: `Ir otra vez: ${p.goAgain}` }) : null,
           p.status === 'Completado' ? el('span', { className: 'pill', textContent: `Calificación: ${ratingText}` }) : null,
-        ),
-        el('div', { className: 'plan-actions' },
+    ),
+    p.comment ? el('div', { className: 'plan-comment small', textContent: p.comment }) : null,
+  el('div', { className: 'plan-actions' },
           (p.googleMapLink ? el('button', {
             className: 'icon-action map',
             type: 'button',
