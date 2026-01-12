@@ -1143,23 +1143,7 @@ function renderPlanForm() {
           ),
         ),
       ),
-      // Optional comment field (max 500 chars)
-      el('div', { style: 'margin-top:8px' },
-        el('label', { htmlFor: 'plan-comment', textContent: 'Comentario (opcional)' }),
-        el('textarea', {
-          id: 'plan-comment',
-          className: 'input',
-          placeholder: 'Añade una nota o comentario (máx. 500 caracteres)',
-          maxlength: 500,
-          value: plan?.comment ?? '',
-          oninput: (e) => {
-            const elc = document.getElementById('plan-comment-count');
-            const v = e?.target?.value || '';
-            if (elc) elc.textContent = `${v.length}/500`;
-          },
-        }),
-        el('div', { className: 'small', id: 'plan-comment-count', style: 'margin-top:6px', textContent: `${(plan?.comment || '').length}/500` }),
-      ),
+      // (Comentario moved later in the form)
     ),
 
     el('div', { className: 'form-grid two' },
@@ -1204,8 +1188,25 @@ function renderPlanForm() {
       el('div', { className: 'help', textContent: '1 a 5 estrellas. (En Pendiente se oculta y se guarda como 0.)' }),
     ),
 
+    // Optional comment field (max 500 chars) - placed just before action buttons so it's visible when editing
+    el('div', { style: 'margin-top:8px' },
+      el('label', { htmlFor: 'plan-comment', textContent: 'Comentario (opcional)' }),
+      el('textarea', {
+        id: 'plan-comment',
+        className: 'input',
+        placeholder: 'Añade una nota o comentario (máx. 500 caracteres)',
+        maxlength: 500,
+        oninput: (e) => {
+          const elc = document.getElementById('plan-comment-count');
+          const v = e?.target?.value || '';
+          if (elc) elc.textContent = `${v.length}/500`;
+        },
+      }, plan?.comment ?? ''),
+      el('div', { className: 'small', id: 'plan-comment-count', style: 'margin-top:6px', textContent: `${(plan?.comment || '').length}/500` }),
+    ),
+
     el('div', { className: 'row space' },
-  el('button', { className: 'btn primary', type: 'submit', textContent: isEditing ? 'Guardar cambios' : 'Registrar' }),
+      el('button', { className: 'btn primary', type: 'submit', textContent: isEditing ? 'Guardar cambios' : 'Registrar' }),
       el('button', {
         className: 'btn',
         type: 'button',
@@ -1231,6 +1232,11 @@ function renderPlanForm() {
       document.getElementById(ids.status).value = plan.status;
       document.getElementById(ids.goAgain).value = plan.goAgain;
       setStatusUI();
+      // Populate comment textarea and counter when editing
+      const commentEl = document.getElementById('plan-comment');
+      const commentCountEl = document.getElementById('plan-comment-count');
+      if (commentEl) commentEl.value = plan.comment ?? '';
+      if (commentCountEl) commentCountEl.textContent = `${(plan.comment || '').length}/500`;
     }
 
     updateMapPreview();

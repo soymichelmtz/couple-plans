@@ -419,12 +419,7 @@ label {
   color: #000;
 }
 
-.plan-actions {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  margin-top: 0;
-}
+/* .plan-actions early absolute positioning removed to avoid overlap with comment text; handled later when expanded */
 
 .icon-action {
   font-size: 16px;
