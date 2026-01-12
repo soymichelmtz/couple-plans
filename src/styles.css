@@ -536,17 +536,28 @@ label {
 }
 
 .plan-actions {
+  /* Keep actions visually aligned to the right corner of the card */
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
   display: inline-flex;
   gap: 10px;
   justify-content: flex-end;
   align-items: center;
-  margin-top: 6px;
+  margin-top: 0;
 }
 
 /* Separator above actions (only visible when expanded) */
 .plan[open] .plan-actions {
   margin-top: 10px;
   padding-top: 10px;
+}
+
+/* Comment text inside plan cards: justified and avoid overlapping action buttons */
+.plan-comment {
+  text-align: justify;
+  /* reserve horizontal space to prevent overlap with the absolute-positioned actions */
+  margin-right: 100px;
 }
 
 /* Show edit/delete only when the card is expanded */
