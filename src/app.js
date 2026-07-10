@@ -117,7 +117,7 @@ function load() {
   seedIfEmpty();
   // Keep local data for migration fallback
   state.session = null;
-  // Load existing plans from local storage and migrate only those missing createdBy
+  // Load existing plans from local storage and migrate missing fields.
   try {
     const stored = Storage.getPlans();
     state.plans = Array.isArray(stored) ? stored.map((p) => {
@@ -125,7 +125,10 @@ function load() {
       const createdBy = hasCreated ? p.createdBy : 'michel@couple-plans.local';
       // ownerKey: if present keep, otherwise derive from createdBy
       const ownerKey = hasCreated ? (p.ownerKey || getOwnerKey({ createdBy })) : 'michel';
-      return { ...p, createdBy, ownerKey };
+      // Year migration: existing plans without year are assigned to 2026.
+      const parsedYear = Number.parseInt(String(p?.year ?? ''), 10);
+      const year = Number.isFinite(parsedYear) && parsedYear >= 1900 && parsedYear <= 2100 ? parsedYear : 2026;
+      return { ...p, createdBy, ownerKey, year };
     }) : [];
     // Persist only if we modified any entry (safe to resave to ensure consistency)
     savePlans();
@@ -236,10 +239,14 @@ function requireAuth() {
 }
 
 function sanitizePlanInput(input) {
+  const parsedYear = Number.parseInt(String(input.year ?? ''), 10);
+  const year = Number.isFinite(parsedYear) && parsedYear >= 1900 && parsedYear <= 2100 ? parsedYear : 2026;
+
   const plan = {
     id: input.id ?? crypto.randomUUID(),
     place: String(input.place || '').trim(),
-  type: ['Comida', 'Visitar', 'Cine'].includes(input.type) ? input.type : 'Visitar',
+    type: ['Comida', 'Visitar', 'Cine'].includes(input.type) ? input.type : 'Visitar',
+    year,
     time: ['Día', 'Tarde', 'Noche'].includes(input.time) ? input.time : 'Noche',
     status: input.status === 'Completado' ? 'Completado' : 'Pendiente',
     location: String(input.location || '').trim(),
@@ -264,6 +271,9 @@ function sanitizePlanInput(input) {
 
   if (!plan.place) throw new Error('Escribe un lugar.');
   if (!plan.location) throw new Error('Escribe una ubicación.');
+  if (!Number.isFinite(plan.year) || plan.year < 1900 || plan.year > 2100) {
+    throw new Error('El año debe estar entre 1900 y 2100.');
+  }
   if (!Number.isFinite(plan.rating) || plan.rating < 0 || plan.rating > 5) {
     throw new Error('La calificación debe ser entre 0 y 5.');
   }
@@ -456,7 +466,7 @@ function applyFilters(plans) {
   const q = state.filters.q.trim().toLowerCase();
   const filtered = plans.filter((p) => {
     if (q) {
-      const hay = `${p.place} ${p.location}`.toLowerCase();
+      const hay = `${p.place} ${p.location} ${p.year || ''}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     if (state.filters.status !== 'all' && p.status !== state.filters.status) return false;
@@ -926,6 +936,7 @@ function renderPlanForm() {
   const ids = {
     place: 'plan-place',
     location: 'plan-location',
+    year: 'plan-year',
     type: 'plan-type',
     time: 'plan-time',
     status: 'plan-status',
@@ -1026,16 +1037,22 @@ function renderPlanForm() {
     className: 'grid',
     onsubmit: async (e) => {
       e.preventDefault();
-      // Prevent duplicate plan names (case-insensitive) when creating a new plan
+      // Prevent duplicate plan names for the same year (case-insensitive)
       const placeEl = document.getElementById(ids.place);
       const placeVal = String(placeEl?.value || '').trim();
+      const yearVal = Number.parseInt(String(document.getElementById(ids.year)?.value || ''), 10);
       if (!placeVal) {
         toast('Escribe un lugar.');
         return;
       }
-      const duplicate = state.plans.some((p) => String(p.place || '').trim().toLowerCase() === placeVal.toLowerCase() && p.id !== plan?.id);
+      const duplicate = state.plans.some((p) => {
+        const samePlace = String(p.place || '').trim().toLowerCase() === placeVal.toLowerCase();
+        const pYear = Number.parseInt(String(p.year ?? ''), 10);
+        const sameYear = pYear === yearVal;
+        return samePlace && sameYear && p.id !== plan?.id;
+      });
       if (duplicate) {
-        toast('Ya existe un plan con ese nombre.');
+        toast('Ya existe un plan con ese nombre para ese año.');
         return;
       }
       const status = document.getElementById(ids.status).value;
@@ -1048,6 +1065,7 @@ function renderPlanForm() {
         completedBy: plan?.completedBy,
         place: document.getElementById(ids.place).value,
         location: document.getElementById(ids.location).value,
+        year: Number.parseInt(String(document.getElementById(ids.year).value || ''), 10),
         type: document.getElementById(ids.type).value,
         time: document.getElementById(ids.time).value,
         status,
@@ -1160,6 +1178,20 @@ function renderPlanForm() {
 
     el('div', { className: 'form-grid two' },
       el('div', {},
+        el('label', { htmlFor: ids.year, textContent: 'Año' }),
+        el('input', {
+          id: ids.year,
+          className: 'input',
+          type: 'number',
+          min: '1900',
+          max: '2100',
+          step: '1',
+          required: true,
+          placeholder: 'Ej. 2026',
+          value: String(plan?.year ?? 2026),
+        }),
+      ),
+      el('div', {},
         el('label', { htmlFor: ids.type, textContent: 'Tipo' }),
         el('select', { id: ids.type },
           el('option', { value: 'Comida', textContent: '🐷 Comida' }),
@@ -1167,6 +1199,9 @@ function renderPlanForm() {
           el('option', { value: 'Cine', textContent: '🎬 Cine' }),
         ),
       ),
+    ),
+
+    el('div', { className: 'form-grid two' },
       el('div', {},
         el('label', { htmlFor: ids.time, textContent: 'Horario' }),
         el('select', { id: ids.time },
@@ -1236,11 +1271,13 @@ function renderPlanForm() {
   queueMicrotask(() => {
     if (!isEditing) {
       document.getElementById(ids.type).value = 'Comida';
+      document.getElementById(ids.year).value = String(new Date().getFullYear());
       document.getElementById(ids.time).value = 'Día';
       document.getElementById(ids.status).value = 'Pendiente';
       setStatusUI();
     } else if (plan) {
       document.getElementById(ids.type).value = plan.type;
+      document.getElementById(ids.year).value = String(plan.year ?? 2026);
       document.getElementById(ids.time).value = plan.time;
       document.getElementById(ids.status).value = plan.status;
       document.getElementById(ids.goAgain).value = plan.goAgain;
@@ -1387,6 +1424,7 @@ function renderPlanList(plans) {
         ),
         el('div', { className: 'meta meta--singleline' },
           el('span', { className: 'pill', textContent: typeLabel }),
+          el('span', { className: 'pill', textContent: `📅 ${p.year ?? 2026}` }),
           el('span', { className: 'pill', textContent: timeLabel }),
           p.status === 'Completado' ? el('span', { className: (p.goAgain === 'Sí' ? 'pill ok' : 'pill no'), textContent: `Ir otra vez: ${p.goAgain}` }) : null,
           p.status === 'Completado' ? el('span', { className: 'pill', textContent: `Calificación: ${ratingText}` }) : null,
@@ -1602,6 +1640,7 @@ cloud.onAuth(async (userOrInfo) => {
       // Preserve createdBy/ownerKey from local storage when available so our
       // local migration isn't overwritten by remote docs that lack those fields.
       const localStored = Storage.getPlans();
+      const missingYear = [];
       state.plans = plans.map((p) => {
         const normalized = {
           ...p,
@@ -1617,10 +1656,23 @@ cloud.onAuth(async (userOrInfo) => {
           ? local.ownerKey
           : (normalized.ownerKey || getOwnerKey({ createdBy }) || getOwnerKey(normalized));
 
-        return { ...normalized, createdBy, ownerKey };
+        const parsedYear = Number.parseInt(String((local && local.year != null) ? local.year : normalized.year), 10);
+        const year = Number.isFinite(parsedYear) && parsedYear >= 1900 && parsedYear <= 2100 ? parsedYear : 2026;
+        if (!Number.isFinite(Number(normalized.year))) {
+          missingYear.push({ ...normalized, createdBy, ownerKey, year });
+        }
+
+        return { ...normalized, createdBy, ownerKey, year };
       });
       savePlans();
       render();
+
+      // Backfill missing year in cloud so existing plans become explicitly tagged as 2026.
+      if (state.cloudReady && missingYear.length) {
+        Promise.allSettled(missingYear.map((p) => cloud.upsertPlan(p))).catch(() => {
+          // ignore backfill errors to avoid blocking UI updates
+        });
+      }
     });
   }
 
