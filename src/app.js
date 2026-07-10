@@ -1586,6 +1586,14 @@ function renderFooter() {
 
 function render() {
   const app = document.getElementById('app');
+
+  // Preserve focus for filter controls across full re-renders.
+  const activeEl = document.activeElement;
+  const activeId = activeEl?.id || '';
+  const shouldRestoreFilterFocus = activeId === 'filter-q' || activeId === 'filter-year';
+  const activeSelectionStart = (activeId === 'filter-q' && typeof activeEl?.selectionStart === 'number')
+    ? activeEl.selectionStart
+    : null;
   
   // Save which details elements are currently open
   const openPlanIds = new Set(
@@ -1622,6 +1630,20 @@ function render() {
         detailsEl.setAttribute('open', '');
       }
     });
+
+    if (shouldRestoreFilterFocus) {
+      const nextEl = document.getElementById(activeId);
+      if (nextEl) {
+        try {
+          nextEl.focus();
+          if (activeId === 'filter-q' && activeSelectionStart !== null && typeof nextEl.setSelectionRange === 'function') {
+            nextEl.setSelectionRange(activeSelectionStart, activeSelectionStart);
+          }
+        } catch (e) {
+          // ignore focus/selection restoration errors
+        }
+      }
+    }
   });
 }
 
@@ -1671,9 +1693,12 @@ cloud.onAuth(async (userOrInfo) => {
     cloud._listening = true;
 
     cloud.onLocations((locs) => {
+      const prev = JSON.stringify(Array.isArray(state.locations) ? state.locations : []);
+      const next = JSON.stringify(Array.isArray(locs) ? locs : []);
       state.locations = locs;
       // keep local mirror (optional)
       saveLocations();
+      if (prev === next) return;
       render();
     });
 
@@ -1683,7 +1708,7 @@ cloud.onAuth(async (userOrInfo) => {
       // local migration isn't overwritten by remote docs that lack those fields.
       const localStored = Storage.getPlans();
       const missingYear = [];
-      state.plans = plans.map((p) => {
+      const nextPlans = plans.map((p) => {
         const normalized = {
           ...p,
           createdAt: p.createdAt?.toDate ? p.createdAt.toDate().toISOString() : p.createdAt,
@@ -1706,8 +1731,11 @@ cloud.onAuth(async (userOrInfo) => {
 
         return { ...normalized, createdBy, ownerKey, year };
       });
+      const prevPlansJson = JSON.stringify(Array.isArray(state.plans) ? state.plans : []);
+      const nextPlansJson = JSON.stringify(nextPlans);
+      state.plans = nextPlans;
       savePlans();
-      render();
+      if (prevPlansJson !== nextPlansJson) render();
 
       // Backfill missing year in cloud so existing plans become explicitly tagged as 2026.
       if (state.cloudReady && missingYear.length) {
