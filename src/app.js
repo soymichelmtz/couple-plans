@@ -1338,7 +1338,6 @@ function renderPlanList(plans) {
         // In compact mode we collapse actions/meta via CSS inside `.plan-grid`.
         return el('details', {
           className: `plan plan--compact ${statusClass}`,
-          open: false,
           'data-plan-id': p.id,
         },
           el('summary', {
@@ -1396,8 +1395,14 @@ function renderPlanList(plans) {
     const titlePrefix = `${typeEmoji}${timeEmoji} `;
 
       // Accordion card
-      return el('details', { className: `plan ${statusClass}`, open: false, 'data-plan-id': p.id },
-        el('summary', { className: 'plan-summary' },
+      return el('details', { className: `plan ${statusClass}`, 'data-plan-id': p.id },
+        el('summary', { 
+          className: 'plan-summary',
+          onclick: (e) => {
+            // Allow native <details> toggle; prevent event from bubbling and affecting drag/buttons
+            e.stopPropagation();
+          }
+        },
           el('div', { className: 'plan-summary-left' },
             el('span', { className: 'drag-handle', title: 'Arrastra para cambiar prioridad', textContent: '⋮⋮', 'data-drag-handle': '' }),
             el('div', {},
@@ -1488,8 +1493,6 @@ function renderPlanList(plans) {
 
   // Attach drag handlers after mount
   queueMicrotask(() => {
-    // Force collapsed by default (some browsers may restore <details> open state)
-    root.querySelectorAll('details.plan[open]').forEach((d) => d.removeAttribute('open'));
     setupDragAndDrop(root, plans);
   });
   return root;
