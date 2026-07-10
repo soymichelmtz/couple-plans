@@ -56,6 +56,7 @@ const state = {
     status: 'Pendiente',
     type: 'all',
     time: 'all',
+    year: 'all',
     tagTypes: [],
     tagTimes: [],
     tagOwners: [],
@@ -472,6 +473,7 @@ function applyFilters(plans) {
     if (state.filters.status !== 'all' && p.status !== state.filters.status) return false;
     if (state.filters.type !== 'all' && p.type !== state.filters.type) return false;
     if (state.filters.time !== 'all' && p.time !== state.filters.time) return false;
+    if (state.filters.year !== 'all' && String(p.year ?? 2026) !== String(state.filters.year)) return false;
 
     // Tag filters (multi-select). If any selected, the plan must match one of them.
     if (Array.isArray(state.filters.tagTypes) && state.filters.tagTypes.length) {
@@ -779,6 +781,10 @@ function renderHome() {
 
 function renderFilters() {
   const qId = 'filter-q';
+  const yearId = 'filter-year';
+  const yearOptions = Array.from(
+    new Set(state.plans.map((p) => String(p.year ?? 2026)))
+  ).sort((a, b) => Number(b) - Number(a));
 
   const onChange = (e) => {
     // Preserve caret/focus across the main re-render so mobile keyboards don't hide.
@@ -917,10 +923,25 @@ function renderFilters() {
 
   return el('div', { className: 'grid' },
     el('div', { className: 'form-grid two' },
-    el('div', {},
-      el('label', { htmlFor: qId, textContent: 'Buscar' }),
-  el('input', { id: qId, className: 'input', value: state.filters.q, oninput: onChange }),
-    ),
+      el('div', {},
+        el('label', { htmlFor: qId, textContent: 'Buscar' }),
+        el('input', { id: qId, className: 'input', value: state.filters.q, oninput: onChange }),
+      ),
+      el('div', {},
+        el('label', { htmlFor: yearId, textContent: 'Año' }),
+        el('select', {
+          id: yearId,
+          className: 'input',
+          value: String(state.filters.year || 'all'),
+          onchange: (e) => {
+            state.filters.year = e.target.value || 'all';
+            render();
+          },
+        },
+          el('option', { value: 'all', textContent: 'Todos' }),
+          ...yearOptions.map((y) => el('option', { value: y, textContent: y })),
+        ),
+      ),
     ),
     el('div', {},
       el('div', { className: 'small', style: 'margin-top:2px' , textContent: 'Tags:' }),
