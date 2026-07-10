@@ -1418,6 +1418,7 @@ function renderPlanList(plans) {
               'aria-label': 'Favorito',
               onclick: (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 const next = { ...p, isFavorite: !Boolean(p.isFavorite) };
                 upsertPlanCloud(next);
                 toast(next.isFavorite ? 'Agregado a favoritos.' : 'Quitado de favoritos.');
@@ -1564,6 +1565,13 @@ function renderFooter() {
 
 function render() {
   const app = document.getElementById('app');
+  
+  // Save which details elements are currently open
+  const openPlanIds = new Set(
+    Array.from(document.querySelectorAll('details[data-plan-id][open]'))
+      .map(el => el.getAttribute('data-plan-id'))
+  );
+
   app.innerHTML = '';
 
   app.appendChild(renderTopbar());
@@ -1584,6 +1592,16 @@ function render() {
     toastNode.setAttribute('data-toast', '');
     document.body.appendChild(toastNode);
   }
+
+  // Restore open state for details elements
+  queueMicrotask(() => {
+    openPlanIds.forEach(planId => {
+      const detailsEl = document.querySelector(`details[data-plan-id="${planId}"]`);
+      if (detailsEl && !detailsEl.hasAttribute('open')) {
+        detailsEl.setAttribute('open', '');
+      }
+    });
+  });
 }
 
 load();
